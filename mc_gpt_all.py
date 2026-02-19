@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
-from dataset.md_seq import MoDaSeq, paired_collate_fn
+from dataset.md_seq import MoDaSeq, paired_collate_fn, text_collate_fn
 # from models.gpt2 import condGPT2
 
 from utils.log import Logger
@@ -24,6 +24,7 @@ import pdb
 import numpy as np
 import models
 import datetime
+import re
 warnings.filterwarnings('ignore')
 
 import torch.nn.functional as F
@@ -55,11 +56,67 @@ class MCTall():
         checkpoint = torch.load(config.vqvae_weight)
         vqvae.load_state_dict(checkpoint['model'], strict=False)
 
+
+        # Dummy Forward Pass
+        print("Running dummy forward pass to initialize lazy modules...")
+        dummy_batch = next(iter(training_data)) 
+        music_seq_d, pose_seq_d, text_upper_seq_d, text_lower_seq_d, text_torso_seq_d, text_whole_seq_d, text_meta_seq_d = dummy_batch
+        music_seq_d = music_seq_d.to(self.device)
+        pose_seq_d = pose_seq_d.to(self.device)
+        pose_seq_d[:, :, :3] = 0
+        text_upper_seq_d = text_upper_seq_d.to(self.device)
+        text_lower_seq_d = text_lower_seq_d.to(self.device)
+        text_torso_seq_d = text_torso_seq_d.to(self.device)
+        text_whole_seq_d = text_whole_seq_d.to(self.device)
+        
+        music_ds_rate = config.ds_rate if not hasattr(config, 'external_wav') else config.external_wav_rate
+        music_ds_rate = config.music_ds_rate if hasattr(config, 'music_ds_rate') else music_ds_rate # path = 7.5 fps; rate = 1
+        music_relative_rate = config.music_relative_rate if hasattr(config, 'music_relative_rate') else config.ds_rate # ds_rate = 8, no music_relative_rate
+        
+        music_seq_d = music_seq_d[:, :, :config.structure_generate.n_music//music_ds_rate].contiguous().float() # structure_generate.n_music = 438
+        b, t, c = music_seq_d.size()
+        music_seq_d = music_seq_d.view(b, t//music_ds_rate, c*music_ds_rate)
+        
+        with torch.no_grad():
+            quants_pred = vqvae.module.encode(pose_seq_d)
+            if isinstance(quants_pred, tuple):
+                quants_input_d = tuple(quants_pred[ii][0][:, :-1].clone().detach() for ii in range(len(quants_pred)))
+                quants_target_d = tuple(quants_pred[ii][0][:, 1:].clone().detach() for ii in range(len(quants_pred)))
+            else:
+                quants = quants_pred[0]
+                quants_input_d = quants[:, :-1].clone().detach()
+                quants_target_d = quants[:, 1:].clone().detach()
+            
+            # --- 核心：执行一次 GPT 前向传播 ---
+            # 必须使用 .module 绕过 DataParallel 的分发机制，直接在单卡上初始化参数
+            # 如果 gpt 不是 DataParallel，直接调用 gpt 即可
+            gpt_inner = gpt.module if isinstance(gpt, torch.nn.DataParallel) else gpt
+            _ = gpt_inner(quants_input_d, music_seq_d[:, config.ds_rate//music_relative_rate:], text_upper_seq_d, text_lower_seq_d, text_torso_seq_d, text_whole_seq_d, text_meta_seq_d, quants_target_d)
+            print("Dummy forward pass finished. Lazy modules initialized.")
+        
+        # Checkpoint and Start Epoch
+        start_epoch = 1
         if hasattr(config, 'init_weight') and config.init_weight is not None and config.init_weight is not '':
             print('Use pretrained model!')
             print(config.init_weight)  
             checkpoint = torch.load(config.init_weight)
             gpt.load_state_dict(checkpoint['model'], strict=False)
+
+            try:
+                # 使用正则寻找 epoch_ 后面的数字
+                match = re.search(r'epoch_(\d+)\.pt', config.init_weight)
+                if match:
+                    loaded_epoch = int(match.group(1))
+                    start_epoch = loaded_epoch + 1
+                    print(f"Detected checkpoint epoch: {loaded_epoch}. Resuming training from epoch {start_epoch}...")
+                else:
+                    # 如果文件名里没有 epoch，尝试从 checkpoint 字典里找 (如果有保存的话)
+                    if 'epoch' in checkpoint:
+                        start_epoch = checkpoint['epoch'] + 1
+                        print(f"Loaded epoch from checkpoint dict. Resuming from {start_epoch}...")
+            except Exception as e:
+                print(f"Could not parse epoch from checkpoint, starting from {start_epoch}. Error: {e}")
+
         # self.model.eval()
 
         random.seed(config.seed)
@@ -68,22 +125,30 @@ class MCTall():
         torch.cuda.manual_seed(config.seed)
         self.device = torch.device('cuda' if config.cuda else 'cpu')
 
-
+        if start_epoch > 1:
+            print(f"Manually advancing scheduler to epoch {start_epoch - 1}")
+            for _ in range(start_epoch - 1):
+                self.schedular.step()
+        
         # Training Loop
-        for epoch_i in range(1, config.epoch + 1):
+        for epoch_i in range(start_epoch, config.epoch + 1):
             log.set_progress(epoch_i, len(training_data))
 
             for batch_i, batch in enumerate(training_data):
                 # LR Scheduler missing
                 # pose_seq = map(lambda x: x.to(self.device), batch)
                 
-                music_seq, pose_seq  = batch 
+                music_seq, pose_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq = batch 
 
                 # print(music_seq.size(), pose_seq.size())
                 
                 music_seq = music_seq.to(self.device)
                 pose_seq = pose_seq.to(self.device)
-
+                text_upper_seq = text_upper_seq.to(self.device)
+                text_lower_seq = text_lower_seq.to(self.device)
+                text_torso_seq = text_torso_seq.to(self.device)
+                text_whole_seq = text_whole_seq.to(self.device)
+                
                 pose_seq[:, :, :3] = 0
                 # print(pose_seq.size())
                 optimizer.zero_grad()
@@ -130,7 +195,7 @@ class MCTall():
                         # output, loss = gpt(quants[:, :-1].clone().detach(), music_seq[:, 1:], quants[:, 1:].clone().detach())
                 # print('L130, ', config.ds_rate//music_relative_rate)
 
-                output, loss = gpt(quants_input, music_seq[:, config.ds_rate//music_relative_rate:], quants_target)
+                output, loss = gpt(quants_input, music_seq[:, config.ds_rate//music_relative_rate:], text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq, quants_target)
                 loss = loss.mean() # RuntimeError: grad can be implicitly created only for scalar outputs
                 loss.backward()
 
@@ -166,9 +231,13 @@ class MCTall():
                     for i_eval, batch_eval in enumerate(tqdm(test_loader, desc='Generating Dance Poses')):
                         # Prepare data
                         # pose_seq_eval = map(lambda x: x.to(self.device), batch_eval)
-                        music_seq, pose_seq = batch_eval
+                        music_seq, pose_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq = batch_eval
                         music_seq = music_seq.to(self.device)
                         pose_seq = pose_seq.to(self.device)
+                        text_upper_seq = text_upper_seq.to(self.device)
+                        text_lower_seq = text_lower_seq.to(self.device)
+                        text_torso_seq = text_torso_seq.to(self.device)
+                        text_whole_seq = text_whole_seq.to(self.device)
                         
                         quants = vqvae.module.encode(pose_seq)
                         # print(pose_seq.size())
@@ -193,7 +262,7 @@ class MCTall():
 
                         # block_size = gpt.module.get_block_size()
 
-                        zs = gpt.module.sample(x, cond=music_seq, shift=config.sample_shift if hasattr(config, 'sample_shift') else None)
+                        zs = gpt.module.sample(x, music_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq, shift=config.sample_shift if hasattr(config, 'sample_shift') else None)
                         # jj = 0
                         # for k in range(music_seq.size(1)):
                         #     x_cond = x if x.size(1) <= block_size else x[:, -block_size:] # crop context if needed
@@ -484,18 +553,20 @@ class MCTall():
             print ("train with AIST++ dataset!")
             external_wav_rate = self.config.ds_rate // self.config.external_wav_rate  if hasattr(self.config, 'external_wav_rate') else 1
             external_wav_rate = self.config.music_relative_rate if hasattr(self.config, 'music_relative_rate') else external_wav_rate
-            train_music_data, train_dance_data, _ = load_data_aist(
+            train_music_data, train_dance_data, train_text_upper, train_text_lower, train_text_torso, train_text_whole, train_text_meta = load_data_aist(
                 data.train_dir, interval=data.seq_len, move=self.config.move if hasattr(self.config, 'move') else 64, rotmat=self.config.rotmat, \
                 external_wav=self.config.external_wav if hasattr(self.config, 'external_wav') else None, \
                 external_wav_rate=external_wav_rate, \
                 music_normalize=self.config.music_normalize if hasattr(self.config, 'music_normalize') else False, \
-                wav_padding=self.config.wav_padding * (self.config.ds_rate // self.config.music_relative_rate) if hasattr(self.config, 'wav_padding') else 0 )
+                wav_padding=self.config.wav_padding * (self.config.ds_rate // self.config.music_relative_rate) if hasattr(self.config, 'wav_padding') else 0, \
+                text_dir=data.text if hasattr(data, 'text') else None
+            )
         else:
             train_music_data, train_dance_data = load_data(
                 args_train.train_dir, 
                 interval=data.seq_len,
                 data_type=data.data_type)
-        self.training_data = prepare_dataloader(train_music_data, train_dance_data, self.config.batch_size)
+        self.training_data = prepare_dataloader(train_music_data, train_dance_data, train_text_upper, train_text_lower, train_text_torso, train_text_whole, train_text_meta, self.config.batch_size)
 
 
 
@@ -504,15 +575,16 @@ class MCTall():
         data = self.config.data
         if data.name == "aist":
             print ("test with AIST++ dataset!")
-            music_data, dance_data, dance_names = load_test_data_aist(
+            music_data, dance_data, dance_names, text_upper, text_lower, text_torso, text_whole, text_meta = load_test_data_aist(
                 data.test_dir, \
                 move=config.move, \
                 rotmat=config.rotmat, \
                 external_wav=config.external_wav if hasattr(self.config, 'external_wav') else None, \
                 external_wav_rate=self.config.external_wav_rate if hasattr(self.config, 'external_wav_rate') else 1, \
                 music_normalize=self.config.music_normalize if hasattr(self.config, 'music_normalize') else False,\
-                wav_padding=self.config.wav_padding * (self.config.ds_rate // self.config.music_relative_rate) if hasattr(self.config, 'wav_padding') else 0)
-        
+                wav_padding=self.config.wav_padding * (self.config.ds_rate // self.config.music_relative_rate) if hasattr(self.config, 'wav_padding') else 0, \
+                text_dir=data.text if hasattr(data, 'text') else None
+            )        
         else:    
             music_data, dance_data, dance_names = load_test_data(
                 data.test_dir, interval=None)
@@ -520,10 +592,11 @@ class MCTall():
         #pdb.set_trace()
 
         self.test_loader = torch.utils.data.DataLoader(
-            MoDaSeq(music_data, dance_data),
+            MoDaSeq(music_data, dance_data, text_upper, text_lower, text_torso, text_whole, text_meta),
             batch_size=1,
-            shuffle=False
-            # collate_fn=paired_collate_fn,
+            shuffle=False,
+            collate_fn=text_collate_fn
+
         )
         self.dance_names = dance_names
         #pdb.set_trace()
@@ -583,14 +656,15 @@ class MCTall():
         for directory in dirs_to_create:
             ensure_dir_exists(directory)
         
-def prepare_dataloader(music_data, dance_data, batch_size):
+def prepare_dataloader(music_data, dance_data, texts_upper, texts_lower, texts_torso, texts_whole, texts_meta, batch_size):
+    print('hi there')
     data_loader = torch.utils.data.DataLoader(
-        MoDaSeq(music_data, dance_data),
+        MoDaSeq(music_data, dance_data, texts_upper, texts_lower, texts_torso, texts_whole, texts_meta),
         num_workers=8,
         batch_size=batch_size,
         shuffle=True,
-        pin_memory=True
-                # collate_fn=paired_collate_fn,
+        pin_memory=True,
+        collate_fn=text_collate_fn
     )
 
     return data_loader
