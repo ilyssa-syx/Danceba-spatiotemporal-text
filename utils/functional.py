@@ -20,8 +20,18 @@ from tqdm import tqdm
 import pickle
 import cv2
 
+import matplotlib.pyplot as plt
+from pathlib import Path
+from matplotlib.colors import ListedColormap
+from tempfile import TemporaryDirectory
+import librosa as lr
+import soundfile as sf
+from matplotlib import cm
+
+
 from smplx import SMPL
 
+import matplotlib.animation as animation
 
 from scipy.spatial.transform import Rotation as R
 
@@ -490,10 +500,10 @@ def visualizeAndWrite(results,config,expdir,dance_names, epoch, quants=None):
             np_dance[:, 2*8:2*9] = root
             np_dances.append(np_dance)
     write2pkl(dance_datas, dance_names, config.testing, expdir, epoch, rotmat=config.rotmat)
-    pose_code2pkl(quants, dance_names, config.testing, expdir, epoch)
-    write2json(np_dances, dance_names,config.testing, expdir,epoch)
-    visualize(config.testing, dance_names, expdir,epoch, quants)
-    img2video(expdir,epoch)
+    # pose_code2pkl(quants, dance_names, config.testing, expdir, epoch)
+    # write2json(np_dances, dance_names,config.testing, expdir,epoch)
+    # visualize(config.testing, dance_names, expdir,epoch, quants)
+    # img2video(expdir,epoch)
 
     # json_dir = os.path.join(expdir, "jsons",f"ep{epoch:06d}")
     # img_dir = os.path.join(expdir, "imgs",f"ep{epoch:06d}")
@@ -538,106 +548,217 @@ def load_data(data_dir, interval=900, data_type='2D'):
     return music_data, dance_data
     # , [fn.replace('.json', '') for fn in fnames]
 
-
-def load_data_aist(data_dir, interval=120, move=40, rotmat=False, external_wav=None, external_wav_rate=1, music_normalize=False, wav_padding=0):
-    tot = 0
-    music_data, dance_data = [], []
-    fnames = sorted(os.listdir(data_dir))
-    # print(fnames)
-    # fnames = fnames[:10]  # For debug
+def _process_single_file_aist(args):
+    """Helper function to process a single file for parallel loading"""
+    fname, data_dir, text_dir, interval, move, rotmat, external_wav, external_wav_rate, wav_padding = args
     
-    if ".ipynb_checkpoints" in fnames:
-        fnames.remove(".ipynb_checkpoints")
-    for fname in fnames:
-        path = os.path.join(data_dir, fname)
+    path = os.path.join(data_dir, fname)
+    bsnm = os.path.splitext(os.path.basename(fname))[0]
+    metadata_path = os.path.join(text_dir, bsnm + '_meta.json')
+    
+    if not os.path.exists(metadata_path):
+        return None
+    
+    try:
         with open(path) as f:
-            # print(path)
             sample_dict = json.loads(f.read())
             np_music = np.array(sample_dict['music_array'])
 
             if external_wav is not None:
                 wav_path = os.path.join(external_wav, fname.split('_')[-2] + '.json')
-                # print('load from external wav!')
                 with open(wav_path) as ff:
                     sample_dict_wav = json.loads(ff.read())
                     np_music = np.array(sample_dict_wav['music_array']).astype(np.float32)
-                    
             
             np_dance = np.array(sample_dict['dance_array'])
 
             if not rotmat:
-                root = np_dance[:, :3]  # the root
-                np_dance = np_dance - np.tile(root, (1, 24))  # Calculate relative offset with respect to root
+                root = np_dance[:, :3]
+                np_dance = np_dance - np.tile(root, (1, 24))
                 np_dance[:, :3] = root
 
-            music_sample_rate = external_wav_rate if external_wav is not None else 1
-            # print('music_sample_rate', music_sample_rate)
-            # print(music_sample_rate)
-            if interval is not None:
-                seq_len, dim = np_music.shape
-                for i in range(0, seq_len, move):
-                    i_sample = i // music_sample_rate
-                    interval_sample = interval // music_sample_rate
+        # Load text features
+        with open(metadata_path) as fff:
+            metadata = json.loads(fff.read())
+        npz_path = os.path.join(text_dir, bsnm + '_features.npz')
+        npz_data = np.load(npz_path)
 
-                    music_sub_seq = np_music[i_sample: i_sample + interval_sample]
-                    dance_sub_seq = np_dance[i: i + interval]
+        music_sample_rate = external_wav_rate if external_wav is not None else 1
+        
+        music_sub_data, dance_sub_data = [], []
+        text_upper_sub, text_lower_sub, text_torso_sub, text_whole_sub = [], [], [], []
+        text_meta_sub = []
+        
+        if interval is not None:
+            seq_len, dim = np_music.shape
+            for i in range(0, seq_len, move):
+                i_sample = i // music_sample_rate
+                interval_sample = interval // music_sample_rate
 
-                    if len(music_sub_seq) == interval_sample and len(dance_sub_seq) == interval:
-                        padding_sample = wav_padding // music_sample_rate
-                        # Add paddings/context of music
-                        music_sub_seq_pad = np.zeros((interval_sample + padding_sample * 2, dim), dtype=music_sub_seq.dtype)
+                music_sub_seq = np_music[i_sample: i_sample + interval_sample]
+                dance_sub_seq = np_dance[i: i + interval]
+
+                # Load text sub seq
+                upper_sub_seq, lower_sub_seq, torso_sub_seq, whole_sub_seq, meta_sub_seq = [], [], [], [], []
+                for meta in metadata:
+                    if meta['start_frame'] * 2 >= i and meta['end_frame'] * 2 < i + interval:
+                        upper_sub_seq.append(npz_data[f'{meta["original_index"]}_upper_body_feat'])
+                        lower_sub_seq.append(npz_data[f'{meta["original_index"]}_lower_body_feat'])
+                        torso_sub_seq.append(npz_data[f'{meta["original_index"]}_torso_feat'])
+                        whole_sub_seq.append(npz_data[f'{meta["original_index"]}_whole_body_feat'])
                         
-                        if padding_sample > 0:
-                            music_sub_seq_pad[padding_sample:-padding_sample] = music_sub_seq
-                            start_sample = padding_sample if i_sample > padding_sample else i_sample
-                            end_sample = padding_sample if i_sample + interval_sample + padding_sample < seq_len else seq_len - (i_sample + interval_sample)
-                            # print(end_sample)
-                            music_sub_seq_pad[padding_sample - start_sample:padding_sample] = np_music[i_sample - start_sample:i_sample]
-                            if end_sample == padding_sample:
-                                music_sub_seq_pad[-padding_sample:] = np_music[i_sample + interval_sample:i_sample + interval_sample + end_sample]
-                            else:     
-                                music_sub_seq_pad[-padding_sample:-padding_sample + end_sample] = np_music[i_sample + interval_sample:i_sample + interval_sample + end_sample]
-                        else:
-                            music_sub_seq_pad = music_sub_seq
-                        music_data.append(music_sub_seq_pad)
-                        dance_data.append(dance_sub_seq)
-                        tot += 1
-                        # if tot > 1:
-                        #     break
-            else:
-                music_data.append(np_music)
-                dance_data.append(np_dance)
+                        current_meta = meta.copy()
+                        current_meta['start_frame'] = current_meta['start_frame'] * 2 - i
+                        current_meta['end_frame'] = current_meta['end_frame'] * 2 - i
+                        meta_sub_seq.append(current_meta)
+                
+                try:
+                    feat_dim = npz_data[list(npz_data.files)[0]].shape[-1]
+                except:
+                    feat_dim = 512
+                
+                def stack_text_feats(feat_list, dim):
+                    if len(feat_list) > 0:
+                        return np.stack(feat_list)
+                    else:
+                        return np.zeros((0, dim), dtype=np.float32)
+                
+                text_upper_sub.append(stack_text_feats(upper_sub_seq, feat_dim))
+                text_lower_sub.append(stack_text_feats(lower_sub_seq, feat_dim))
+                text_torso_sub.append(stack_text_feats(torso_sub_seq, feat_dim))
+                text_whole_sub.append(stack_text_feats(whole_sub_seq, feat_dim))
+                text_meta_sub.append(meta_sub_seq)
 
-            # if tot > 1:
-            #     break
+                if len(music_sub_seq) == interval_sample and len(dance_sub_seq) == interval:
+                    padding_sample = wav_padding // music_sample_rate
+                    music_sub_seq_pad = np.zeros((interval_sample + padding_sample * 2, dim), dtype=music_sub_seq.dtype)
+                    
+                    if padding_sample > 0:
+                        music_sub_seq_pad[padding_sample:-padding_sample] = music_sub_seq
+                        start_sample = padding_sample if i_sample > padding_sample else i_sample
+                        end_sample = padding_sample if i_sample + interval_sample + padding_sample < seq_len else seq_len - (i_sample + interval_sample)
+                        music_sub_seq_pad[padding_sample - start_sample:padding_sample] = np_music[i_sample - start_sample:i_sample]
+                        if end_sample == padding_sample:
+                            music_sub_seq_pad[-padding_sample:] = np_music[i_sample + interval_sample:i_sample + interval_sample + end_sample]
+                        else:
+                            music_sub_seq_pad[-padding_sample:-padding_sample + end_sample] = np_music[i_sample + interval_sample:i_sample + interval_sample + end_sample]
+                    else:
+                        music_sub_seq_pad = music_sub_seq
+                    
+                    music_sub_data.append(music_sub_seq_pad)
+                    dance_sub_data.append(dance_sub_seq)
+        else:
+            music_sub_data.append(np_music)
+            dance_sub_data.append(np_dance)
             
-            # tot += 1
-            # if tot > 100:
-            #     break
+            upper_list, lower_list, torso_list, whole_list, meta_list = [], [], [], [], []
+            for meta in metadata:
+                upper_list.append(npz_data[f'{meta["original_index"]}_upper_body_feat'])
+                lower_list.append(npz_data[f'{meta["original_index"]}_lower_body_feat'])
+                torso_list.append(npz_data[f'{meta["original_index"]}_torso_feat'])
+                whole_list.append(npz_data[f'{meta["original_index"]}_whole_body_feat'])
+                
+                current_meta = meta.copy()
+                current_meta['start_frame'] = meta['start_frame'] * 2
+                current_meta['end_frame'] = meta['end_frame'] * 2
+                meta_list.append(current_meta)
+            
+            try:
+                feat_dim = npz_data[list(npz_data.files)[0]].shape[-1]
+            except:
+                feat_dim = 512
+            
+            def stack_text_feats(feat_list, dim):
+                if len(feat_list) > 0:
+                    return np.stack(feat_list)
+                else:
+                    return np.zeros((0, dim), dtype=np.float32)
+            
+            text_upper_sub.append(stack_text_feats(upper_list, feat_dim))
+            text_lower_sub.append(stack_text_feats(lower_list, feat_dim))
+            text_torso_sub.append(stack_text_feats(torso_list, feat_dim))
+            text_whole_sub.append(stack_text_feats(whole_list, feat_dim))
+            text_meta_sub.append(meta_list)
+        
+        return {
+            'music': music_sub_data,
+            'dance': dance_sub_data,
+            'text_upper': text_upper_sub,
+            'text_lower': text_lower_sub,
+            'text_torso': text_torso_sub,
+            'text_whole': text_whole_sub,
+            'text_meta': text_meta_sub
+        }
+    except Exception as e:
+        print(f"Error processing {fname}: {e}")
+        return None
+
+
+def load_data_aist(data_dir, interval=120, move=40, rotmat=False, external_wav=None, external_wav_rate=1, music_normalize=False, wav_padding=0, text_dir=None, num_workers=32):
+    """
+    Load AIST dataset with optional parallel processing
+    
+    Args:
+        num_workers: Number of parallel workers. Set to 1 to disable parallelization.
+    """
+    music_data, dance_data = [], []
+    text_upper, text_lower, text_torso, text_whole = [], [], [], []
+    text_meta = []
+    fnames = sorted(os.listdir(data_dir))
+    
+    if ".ipynb_checkpoints" in fnames:
+        fnames.remove(".ipynb_checkpoints")
+    
+    # Prepare arguments for parallel processing
+    args_list = [
+        (fname, data_dir, text_dir, interval, move, rotmat, external_wav, external_wav_rate, wav_padding)
+        for fname in fnames
+    ]
+    
+    # Process files in parallel
+    if num_workers > 1:
+        print(f"Loading data with {num_workers} workers...")
+        with Pool(num_workers) as pool:
+            results = list(tqdm(
+                pool.imap(_process_single_file_aist, args_list),
+                total=len(args_list),
+                desc='Loading files'
+            ))
+    else:
+        print("Loading data sequentially...")
+        results = [_process_single_file_aist(args) for args in tqdm(args_list, desc='Loading files')]
+    
+    # Merge results
+    for result in results:
+        if result is not None:
+            music_data.extend(result['music'])
+            dance_data.extend(result['dance'])
+            text_upper.extend(result['text_upper'])
+            text_lower.extend(result['text_lower'])
+            text_torso.extend(result['text_torso'])
+            text_whole.extend(result['text_whole'])
+            text_meta.extend(result['text_meta'])
+    
+    # Calculate normalization parameters
     music_np = np.stack(music_data).reshape(-1, music_data[0].shape[1])
     music_mean = music_np.mean(0)
     music_std = music_np.std(0)
     music_std[(np.abs(music_mean) < 1e-5) & (np.abs(music_std) < 1e-5)] = 1
     
-    # music_data_norm = [ (music_sub_seq - music_mean) / (music_std + 1e-10) for music_sub_seq in music_data ]
-    # print(music_np)
-
     if music_normalize:
-        print('calculating norm mean and std')
-        music_data_norm = [ (music_sub_seq - music_mean) / (music_std + 1e-10) for music_sub_seq in music_data ]
+        print('Calculating norm mean and std')
+        music_data_norm = [(music_sub_seq - music_mean) / (music_std + 1e-10) for music_sub_seq in music_data]
         with open('/mnt/lustressd/lisiyao1/dance_experiements/music_norm.json', 'w') as fff:
             sample_dict = {
-                'music_mean': music_mean.tolist(), # musics[idx+i],
+                'music_mean': music_mean.tolist(),
                 'music_std': music_std.tolist()
             }
-            # print(sample_dict)
             json.dump(sample_dict, fff)
     else:
-        music_data_norm = music_data 
+        music_data_norm = music_data
+    
+    return music_data_norm, dance_data, text_upper, text_lower, text_torso, text_whole, text_meta
 
-
-    return music_data_norm, dance_data, ['11', '22',]
-    # , [fn.replace('.json', '') for fn in fnames]
 
 
 def load_test_data(data_dir, data_type='2D'):
@@ -667,17 +788,24 @@ def load_test_data(data_dir, data_type='2D'):
 
 
 
-def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_rate=1, music_normalize=False, wav_padding=0):
+def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_rate=1, music_normalize=False, wav_padding=0, text_dir=None):
 
     tot = 0
     input_names = []
 
     music_data, dance_data = [], []
+    text_upper, text_lower, text_torso, text_whole = [], [], [], []
+    text_meta = []
     fnames = sorted(os.listdir(data_dir))
-    #print(fnames)
+    print ('=====================Loading test data==================')
+    print(fnames)
     # fnames = fnames[:60]  # For debug
     for fname in fnames:
         path = os.path.join(data_dir, fname)
+        bsnm = os.path.splitext(os.path.basename(fname))[0]
+        metadata_path = os.path.join(text_dir, bsnm + '_meta.json')
+        if not os.path.exists(metadata_path):
+            continue
         with open(path) as f:
             #print(path)
             sample_dict = json.loads(f.read())
@@ -685,12 +813,16 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
             if external_wav is not None:
                 # print('load from external wav!')
                 wav_path = os.path.join(external_wav, fname.split('_')[-2] + '.json')
+                # for finedance:
+                # wav_path = os.path.join(external_wav, fname)
                 with open(wav_path) as ff:
                     sample_dict_wav = json.loads(ff.read())
                     np_music = np.array(sample_dict_wav['music_array'])
             
             if 'dance_array' in sample_dict:
+                print('yeah')
                 np_dance = np.array(sample_dict['dance_array'])
+                print(np_dance.shape)
                 if not rotmat:
                     root = np_dance[:, :3]  # the root
                     np_dance = np_dance - np.tile(root, (1, 24))  # Calculate relative offset with respect to root
@@ -721,6 +853,53 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
             # tot += 1
             # if tot == 3:
             #     break
+        
+        bsnm = os.path.splitext(os.path.basename(fname))[0]
+        metadata_path = os.path.join(text_dir, bsnm + '_meta.json')
+        with open(metadata_path) as fff:
+            metadata = json.loads(fff.read())
+        npz_path = os.path.join(text_dir, bsnm + '_features.npz')
+        npz_data = np.load(npz_path)
+        if not os.path.exists(npz_path) or not os.path.exists(metadata_path):
+            print('npz_path', npz_path)
+            print('metadata_path', metadata_path)
+        # 收集当前样本的所有文本特征
+        upper_list = []
+        lower_list = []
+        torso_list = []
+        whole_list = []
+        meta_list = []
+        
+        for meta in metadata:
+            upper_list.append(npz_data[f'{meta["original_index"]}_upper_body_feat'])
+            lower_list.append(npz_data[f'{meta["original_index"]}_lower_body_feat'])
+            torso_list.append(npz_data[f'{meta["original_index"]}_torso_feat'])
+            whole_list.append(npz_data[f'{meta["original_index"]}_whole_body_feat'])
+            
+            # 处理 Meta 信息
+            current_meta = meta.copy()
+            current_meta['start_frame'] = meta['start_frame'] * 2
+            current_meta['end_frame'] = meta['end_frame'] * 2
+            meta_list.append(current_meta)
+        
+        # 获取特征维度
+        try:
+            feat_dim = npz_data[list(npz_data.files)[0]].shape[-1]
+        except:
+            feat_dim = 512  # fallback 默认维度
+        
+        def stack_text_feats(feat_list, dim):
+            if len(feat_list) > 0:
+                return np.stack(feat_list)  # 结果 shape: (Seq_Len, Dim)
+            else:
+                return np.zeros((0, dim), dtype=np.float32)
+        
+        text_upper.append(stack_text_feats(upper_list, feat_dim))
+        text_lower.append(stack_text_feats(lower_list, feat_dim))
+        text_torso.append(stack_text_feats(torso_list, feat_dim))
+        text_whole.append(stack_text_feats(whole_list, feat_dim))
+        text_meta.append(meta_list)
+
     # if music_normalize:
     if False:
         with open('/mnt/lustressd/lisiyao1/dance_experiements/music_norm.json') as fff:
@@ -732,8 +911,9 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
         music_data_norm = [ (music_sub_seq - music_mean) / (music_std + 1e-10) for music_sub_seq in music_data ]
     else:
         music_data_norm = music_data
-
-    return music_data_norm, dance_data, input_names
+    print('dance-data')
+    print(dance_data)
+    return music_data_norm, dance_data, input_names, text_upper, text_lower, text_torso, text_whole, text_meta
     
 
 

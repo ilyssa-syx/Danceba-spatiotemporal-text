@@ -19,6 +19,12 @@ def parse_args():
     group.add_argument('--anl', action='store_true')
     group.add_argument('--sample', action='store_true')
 
+    # Text modality control (store_true means disabled when flag present, all enabled by default)
+    parser.add_argument('--not_use_wholebody', action='store_true', help='Disable whole-body text condition')
+    parser.add_argument('--not_use_upperbody', action='store_true', help='Disable upper-body text condition')
+    parser.add_argument('--not_use_lowerbody', action='store_true', help='Disable lower-body text condition')
+    parser.add_argument('--not_use_torso', action='store_true', help='Disable torso text condition')
+
     return parser.parse_args()
 
 
