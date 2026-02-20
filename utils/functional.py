@@ -14,6 +14,7 @@ import numpy
 
 from PIL import Image
 from .keypoint2img import read_keypoints
+import multiprocessing
 from multiprocessing import Pool
 from functools import partial
 from tqdm import tqdm
@@ -716,9 +717,14 @@ def load_data_aist(data_dir, interval=120, move=40, rotmat=False, external_wav=N
     ]
     
     # Process files in parallel
+    # 注意：必须使用 'spawn' 上下文而非默认的 'fork'。
+    # 因为 _build_model() 在 _build_train_loader() 之前执行，model.cuda() 已经初始化了
+    # CUDA context。Linux 默认的 fork 方式会让子进程继承损坏的 CUDA 状态，
+    # 导致 pool.join() 时子进程无法正常退出，主进程永久卡死。
     if num_workers > 1:
-        print(f"Loading data with {num_workers} workers...")
-        with Pool(num_workers) as pool:
+        print(f"Loading data with {num_workers} workers (spawn context)...")
+        spawn_ctx = multiprocessing.get_context('spawn')
+        with spawn_ctx.Pool(num_workers) as pool:
             results = list(tqdm(
                 pool.imap(_process_single_file_aist, args_list),
                 total=len(args_list),

@@ -1,0 +1,620 @@
+[Usage] srun_gpt_all.sh config_path [train|eval] gpunum
+[INFO] Saving results to, or loading files from: cc_motion_gpt_text_fix
+[INFO] Number of GPUs: 1
+/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/mc_gpt_all.py:100: SyntaxWarning: "is not" with a literal. Did you mean "!="?
+  if hasattr(config, 'init_weight') and config.init_weight is not None and config.init_weight is not '':
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+{'anl': False,
+ 'batch_size': 96,
+ 'config': 'configs/cc_motion_gpt_text_fix.yaml',
+ 'cuda': True,
+ 'data': {'data_type': 'None',
+          'name': 'aist',
+          'seq_len': 240,
+          'test_dir': './data/aistpp_test_full_wav',
+          'text': './data/aistpp_full_text',
+          'train_dir': './data/aistpp_train_wav'},
+ 'ds_rate': 8,
+ 'epoch': 150,
+ 'eval': False,
+ 'expname': 'cc_motion_gpt_text_fix',
+ 'external_wav': './data/aistpp_music_feat_7.5fps',
+ 'external_wav_rate': 1,
+ 'global_vel': True,
+ 'log_per_updates': 1,
+ 'loss_weight': {'mse_weight': 1},
+ 'move': 8,
+ 'music_normalize': False,
+ 'need_not_train_data': False,
+ 'not_use_lowerbody': False,
+ 'not_use_torso': False,
+ 'not_use_upperbody': False,
+ 'not_use_wholebody': False,
+ 'optimizer': {'kwargs': {'betas': [0.5, 0.999],
+                          'lr': 0.0003,
+                          'weight_decay': 0},
+               'schedular_kwargs': {'gamma': 0.1, 'milestones': [100, 200]},
+               'type': 'Adam'},
+ 'rotmat': False,
+ 'sample': False,
+ 'save_per_epochs': 15,
+ 'seed': 78,
+ 'structure': {'down_half': {'commit': 0.02,
+                             'depth': 3,
+                             'dilation_growth_rate': 3,
+                             'downs_t': [3],
+                             'emb_width': 512,
+                             'hvqvae_multipliers': [1],
+                             'joint_channel': 3,
+                             'l_bins': 512,
+                             'l_mu': 0.99,
+                             'levels': 1,
+                             'm_conv': 1.0,
+                             'sample_length': 240,
+                             'strides_t': [2],
+                             'use_bottleneck': True,
+                             'vqvae_reverse_decoder_dilation': True,
+                             'width': 512},
+               'joint_channel': 3,
+               'name': 'SepVQVAER',
+               'up_half': {'commit': 0.02,
+                           'depth': 3,
+                           'dilation_growth_rate': 3,
+                           'downs_t': [3],
+                           'emb_width': 512,
+                           'hvqvae_multipliers': [1],
+                           'joint_channel': 3,
+                           'l_bins': 512,
+                           'l_mu': 0.99,
+                           'levels': 1,
+                           'm_conv': 1.0,
+                           'sample_length': 240,
+                           'strides_t': [2],
+                           'use_bottleneck': True,
+                           'vqvae_reverse_decoder_dilation': True,
+                           'width': 512},
+               'use_bottleneck': True},
+ 'structure_generate': {'base': {'attn_pdrop': 0.1,
+                                 'block_size': 29,
+                                 'embd_pdrop': 0.1,
+                                 'n_embd': 768,
+                                 'n_head': 12,
+                                 'n_layer': 6,
+                                 'n_music': 438,
+                                 'n_music_emb': 768,
+                                 'n_text': 512,
+                                 'resid_pdrop': 0.1,
+                                 'vocab_size_down': 512,
+                                 'vocab_size_up': 512},
+                        'block_size': 29,
+                        'head': {'attn_pdrop': 0.1,
+                                 'block_size': 29,
+                                 'embd_pdrop': 0.1,
+                                 'n_embd': 768,
+                                 'n_head': 12,
+                                 'n_layer': 6,
+                                 'resid_pdrop': 0.1,
+                                 'vocab_size': 512,
+                                 'vocab_size_down': 512,
+                                 'vocab_size_up': 512},
+                        'n_music': 438,
+                        'n_music_emb': 768,
+                        'name': 'CrossCondGPT2'},
+ 'test_freq': 15,
+ 'testing': {'ckpt_epoch': 135, 'height': 540, 'width': 960},
+ 'train': True,
+ 'visgt': False,
+ 'vqvae_weight': './experiments/sep_vqvae_root/ckpt/epoch_500.pt'}
+using SepVQVAER and CrossCondGPT2 
+We use bottleneck!
+No motion regularization!
+We use bottleneck!
+No motion regularization!
+train with AIST++ dataset!
+Loading data with 32 workers (spawn context)...
+Loading files:   0%|          | 0/980 [00:00<?, ?it/s]/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+Loading files:   0%|          | 1/980 [00:15<4:15:09, 15.64s/it]Loading files:   0%|          | 3/980 [00:15<1:06:46,  4.10s/it]/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+Loading files:   1%|          | 5/980 [00:16<35:13,  2.17s/it]  /network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+Loading files:   2%|▏         | 15/980 [00:16<07:36,  2.11it/s]Loading files:   3%|▎         | 26/980 [00:16<03:28,  4.57it/s]Loading files:   3%|▎         | 32/980 [00:16<02:30,  6.28it/s]Loading files:   4%|▍         | 43/980 [00:16<01:27, 10.66it/s]Loading files:   5%|▌         | 50/980 [00:17<01:06, 13.90it/s]Loading files:   6%|▌         | 59/980 [00:17<00:48, 19.19it/s]Loading files:   7%|▋         | 66/980 [00:17<00:38, 23.96it/s]Loading files:   7%|▋         | 73/980 [00:17<00:32, 27.99it/s]Loading files:   8%|▊         | 81/980 [00:18<00:52, 17.09it/s]Loading files:  10%|▉         | 94/980 [00:18<00:37, 23.41it/s]Loading files:  14%|█▎        | 134/980 [00:18<00:14, 58.73it/s]Loading files:  15%|█▌        | 147/980 [00:18<00:13, 60.59it/s]Loading files:  16%|█▌        | 158/980 [00:19<00:15, 52.25it/s]Loading files:  18%|█▊        | 175/980 [00:19<00:12, 66.60it/s]Loading files:  19%|█▉        | 186/980 [00:20<00:21, 36.68it/s]Loading files:  20%|█▉        | 194/980 [00:20<00:22, 34.38it/s]Loading files:  23%|██▎       | 223/980 [00:20<00:12, 60.51it/s]Loading files:  24%|██▍       | 235/980 [00:20<00:13, 54.77it/s]Loading files:  25%|██▌       | 245/980 [00:20<00:13, 54.76it/s]Loading files:  26%|██▌       | 256/980 [00:21<00:11, 60.62it/s]Loading files:  27%|██▋       | 268/980 [00:21<00:11, 60.95it/s]Loading files:  28%|██▊       | 279/980 [00:22<00:27, 25.85it/s]Loading files:  29%|██▉       | 285/980 [00:22<00:26, 26.09it/s]Loading files:  33%|███▎      | 322/980 [00:22<00:11, 57.70it/s]Loading files:  34%|███▍      | 334/980 [00:22<00:11, 54.56it/s]Loading files:  35%|███▌      | 344/980 [00:23<00:10, 58.98it/s]Loading files:  36%|███▌      | 354/980 [00:23<00:10, 62.30it/s]Loading files:  37%|███▋      | 363/980 [00:23<00:10, 58.68it/s]Loading files:  38%|███▊      | 373/980 [00:23<00:09, 65.10it/s]Loading files:  39%|███▉      | 382/980 [00:24<00:21, 27.30it/s]Loading files:  40%|███▉      | 389/980 [00:25<00:30, 19.60it/s]Loading files:  46%|████▋     | 455/980 [00:25<00:07, 70.72it/s]Loading files:  49%|████▊     | 476/980 [00:26<00:12, 39.81it/s]Loading files:  50%|█████     | 492/980 [00:26<00:11, 43.21it/s]Loading files:  54%|█████▍    | 529/980 [00:26<00:06, 67.58it/s]Loading files:  56%|█████▌    | 548/980 [00:27<00:06, 66.01it/s]Loading files:  57%|█████▋    | 563/980 [00:27<00:06, 67.70it/s]Loading files:  59%|█████▉    | 576/980 [00:28<00:10, 39.66it/s]Loading files:  60%|█████▉    | 586/980 [00:28<00:11, 33.36it/s]Loading files:  64%|██████▍   | 627/980 [00:28<00:05, 63.35it/s]Loading files:  66%|██████▌   | 644/980 [00:28<00:04, 69.90it/s]Loading files:  67%|██████▋   | 659/980 [00:29<00:04, 67.20it/s]Loading files:  68%|██████▊   | 671/980 [00:30<00:10, 30.48it/s]Loading files:  69%|██████▉   | 680/980 [00:30<00:08, 34.53it/s]Loading files:  73%|███████▎  | 713/980 [00:30<00:04, 59.47it/s]Loading files:  74%|███████▍  | 727/980 [00:30<00:04, 54.79it/s]Loading files:  76%|███████▌  | 741/980 [00:31<00:03, 63.89it/s]Loading files:  77%|███████▋  | 753/980 [00:31<00:03, 59.62it/s]Loading files:  78%|███████▊  | 766/980 [00:31<00:03, 69.26it/s]Loading files:  79%|███████▉  | 777/980 [00:32<00:07, 26.92it/s]Loading files:  85%|████████▍ | 832/980 [00:32<00:02, 67.64it/s]Loading files:  87%|████████▋ | 854/980 [00:33<00:01, 70.11it/s]Loading files:  89%|████████▉ | 872/980 [00:33<00:02, 48.25it/s]Loading files:  90%|█████████ | 886/980 [00:33<00:01, 54.67it/s]Loading files:  94%|█████████▍| 919/980 [00:34<00:00, 80.77it/s]Loading files:  96%|█████████▌| 936/980 [00:34<00:00, 84.85it/s]Loading files:  97%|█████████▋| 951/980 [00:34<00:00, 83.15it/s]Loading files:  98%|█████████▊| 964/980 [00:34<00:00, 68.85it/s]Loading files:  99%|█████████▉| 974/980 [00:34<00:00, 69.78it/s]Loading files: 100%|██████████| 980/980 [00:34<00:00, 28.08it/s]
+hi there
+Using Dance
+test with AIST++ dataset!
+=====================Loading test data==================
+['gBR_sBM_cAll_d04_mBR0_ch01.json', 'gBR_sBM_cAll_d04_mBR0_ch02.json', 'gBR_sBM_cAll_d05_mBR0_ch01.json', 'gBR_sBM_cAll_d05_mBR0_ch02.json', 'gHO_sBM_cAll_d20_mHO5_ch01.json', 'gHO_sBM_cAll_d20_mHO5_ch02.json', 'gHO_sBM_cAll_d21_mHO5_ch01.json', 'gHO_sBM_cAll_d21_mHO5_ch02.json', 'gJB_sBM_cAll_d08_mJB5_ch01.json', 'gJB_sBM_cAll_d08_mJB5_ch02.json', 'gJB_sBM_cAll_d09_mJB5_ch01.json', 'gJB_sBM_cAll_d09_mJB5_ch02.json', 'gJS_sBM_cAll_d01_mJS3_ch01.json', 'gJS_sBM_cAll_d01_mJS3_ch02.json', 'gJS_sBM_cAll_d03_mJS3_ch01.json', 'gJS_sBM_cAll_d03_mJS3_ch02.json', 'gKR_sBM_cAll_d28_mKR2_ch01.json', 'gKR_sBM_cAll_d28_mKR2_ch02.json', 'gKR_sBM_cAll_d30_mKR2_ch01.json', 'gKR_sBM_cAll_d30_mKR2_ch02.json', 'gLH_sBM_cAll_d17_mLH4_ch01.json', 'gLH_sBM_cAll_d17_mLH4_ch02.json', 'gLH_sBM_cAll_d18_mLH4_ch01.json', 'gLH_sBM_cAll_d18_mLH4_ch02.json', 'gLO_sBM_cAll_d13_mLO2_ch01.json', 'gLO_sBM_cAll_d13_mLO2_ch02.json', 'gLO_sBM_cAll_d15_mLO2_ch01.json', 'gLO_sBM_cAll_d15_mLO2_ch02.json', 'gMH_sBM_cAll_d22_mMH3_ch01.json', 'gMH_sBM_cAll_d22_mMH3_ch02.json', 'gMH_sBM_cAll_d24_mMH3_ch01.json', 'gMH_sBM_cAll_d24_mMH3_ch02.json', 'gPO_sBM_cAll_d10_mPO1_ch01.json', 'gPO_sBM_cAll_d10_mPO1_ch02.json', 'gPO_sBM_cAll_d11_mPO1_ch01.json', 'gPO_sBM_cAll_d11_mPO1_ch02.json', 'gWA_sBM_cAll_d25_mWA0_ch01.json', 'gWA_sBM_cAll_d25_mWA0_ch02.json', 'gWA_sBM_cAll_d26_mWA0_ch01.json', 'gWA_sBM_cAll_d26_mWA0_ch02.json']
+yeah
+(720, 72)
+yeah
+(720, 72)
+yeah
+(426, 72)
+yeah
+(426, 72)
+yeah
+(443, 72)
+yeah
+(443, 72)
+yeah
+(524, 72)
+yeah
+(524, 72)
+yeah
+(576, 72)
+yeah
+(576, 72)
+yeah
+(480, 72)
+yeah
+(480, 72)
+yeah
+(576, 72)
+yeah
+(576, 72)
+yeah
+(524, 72)
+yeah
+(524, 72)
+yeah
+(640, 72)
+yeah
+(640, 72)
+yeah
+(720, 72)
+yeah
+(720, 72)
+dance-data
+[array([[ 0.08726277,  1.63223004,  0.18329069, ..., -0.2336463 ,
+        -0.07632947, -0.35189104],
+       [ 0.08740261,  1.63503635,  0.18767509, ..., -0.23153751,
+        -0.07210505, -0.3571175 ],
+       [ 0.08792558,  1.6409328 ,  0.19476593, ..., -0.22328164,
+        -0.0676868 , -0.36939812],
+       ...,
+       [-0.0436221 ,  1.56993556,  0.44302845, ..., -0.42706392,
+         0.20609939,  0.25467104],
+       [-0.0436221 ,  1.56993556,  0.44302845, ..., -0.42706392,
+         0.20609939,  0.25467104],
+       [-0.0436221 ,  1.56993556,  0.44302845, ..., -0.42706392,
+         0.20609939,  0.25467104]]), array([[ 0.07676814,  1.72340488, -0.23913443, ..., -0.24182875,
+        -0.09782732, -0.06386891],
+       [ 0.07720707,  1.71463835, -0.23935318, ..., -0.24687767,
+        -0.10314655, -0.07243878],
+       [ 0.07560977,  1.69819677, -0.238731  , ..., -0.24673408,
+        -0.11890459, -0.09969732],
+       ...,
+       [ 0.0951627 ,  1.65440035,  0.20130709, ..., -0.56824337,
+         0.32761002,  0.30250868],
+       [ 0.0951627 ,  1.65440035,  0.20130709, ..., -0.56824337,
+         0.32761002,  0.30250868],
+       [ 0.0951627 ,  1.65440035,  0.20130709, ..., -0.56824337,
+         0.32761002,  0.30250868]]), array([[-0.03863642,  1.60291696, -0.12246403, ..., -0.36428481,
+        -0.02172208,  0.18968363],
+       [-0.0423327 ,  1.59847069, -0.12207875, ..., -0.36470718,
+        -0.0264082 ,  0.18705501],
+       [-0.0483015 ,  1.5923444 , -0.12125869, ..., -0.36800043,
+        -0.03628087,  0.18079612],
+       ...,
+       [ 0.13561298,  1.66364324, -0.26202464, ..., -0.17309588,
+        -0.19008648, -0.25742936],
+       [ 0.13561298,  1.66364324, -0.26202464, ..., -0.17309588,
+        -0.19008648, -0.25742936],
+       [ 0.13561298,  1.66364324, -0.26202464, ..., -0.17309588,
+        -0.19008648, -0.25742936]]), array([[ 0.2378749 ,  1.53917646, -0.42096165, ..., -0.47968842,
+         0.06982231, -0.0897508 ],
+       [ 0.23461123,  1.53573334, -0.42111093, ..., -0.48233788,
+         0.06838918, -0.08574247],
+       [ 0.22609149,  1.53240836, -0.42220673, ..., -0.48004512,
+         0.05625451, -0.07963714],
+       ...,
+       [ 0.11175501,  1.62060618, -0.40208176, ..., -0.30789535,
+        -0.01529634, -0.36054215],
+       [ 0.11175501,  1.62060618, -0.40208176, ..., -0.30789535,
+        -0.01529634, -0.36054215],
+       [ 0.11175501,  1.62060618, -0.40208176, ..., -0.30789535,
+        -0.01529634, -0.36054215]]), array([[ 1.64902329e+00,  1.75255299e+00,  4.47988182e-01, ...,
+        -3.34295511e-01,  2.81560898e-01, -6.83648676e-01],
+       [ 1.64838910e+00,  1.75645971e+00,  4.56873029e-01, ...,
+        -3.24982882e-01,  2.77156591e-01, -6.86263233e-01],
+       [ 1.64050555e+00,  1.75366843e+00,  4.64006364e-01, ...,
+        -2.99981236e-01,  2.72440314e-01, -6.73586875e-01],
+       ...,
+       [ 1.04301202e+00,  1.65044379e+00, -7.21010983e-01, ...,
+         5.56482077e-01,  3.53975058e-01, -3.40044498e-04],
+       [ 1.04301202e+00,  1.65044379e+00, -7.21010983e-01, ...,
+         5.56482077e-01,  3.53975058e-01, -3.40044498e-04],
+       [ 1.04301202e+00,  1.65044379e+00, -7.21010983e-01, ...,
+         5.56482077e-01,  3.53975058e-01, -3.40044498e-04]]), array([[ 1.73396134,  1.76338148, -0.55104041, ...,  0.08393097,
+         0.28946543, -0.8080523 ],
+       [ 1.72350764,  1.76757717, -0.55306453, ...,  0.1287303 ,
+         0.28415084, -0.79847556],
+       [ 1.70901191,  1.77351642, -0.55318826, ...,  0.17077792,
+         0.26631737, -0.79059416],
+       ...,
+       [ 1.69060969,  1.68129182, -0.27034241, ..., -0.23816204,
+         0.0636723 ,  0.36115351],
+       [ 1.69060969,  1.68129182, -0.27034241, ..., -0.23816204,
+         0.0636723 ,  0.36115351],
+       [ 1.69060969,  1.68129182, -0.27034241, ..., -0.23816204,
+         0.0636723 ,  0.36115351]]), array([[ 0.02720619,  1.69644415, -0.14374669, ..., -0.75422496,
+         0.41155708,  0.22997805],
+       [ 0.02717081,  1.69633079, -0.14375344, ..., -0.7545428 ,
+         0.41189933,  0.22986376],
+       [ 0.02706179,  1.69618857, -0.14370334, ..., -0.75498262,
+         0.41184008,  0.22929895],
+       ...,
+       [ 0.10886621,  1.6891042 , -0.1145678 , ..., -0.77174079,
+         0.42332304,  0.18320863],
+       [ 0.10886621,  1.6891042 , -0.1145678 , ..., -0.77174079,
+         0.42332304,  0.18320863],
+       [ 0.10886621,  1.6891042 , -0.1145678 , ..., -0.77174079,
+         0.42332304,  0.18320863]]), array([[ 0.03199575,  1.67009878, -0.04791335, ..., -0.18684814,
+        -0.13698089,  0.13835032],
+       [ 0.03201189,  1.67008829, -0.04788832, ..., -0.18684717,
+        -0.13695145,  0.13837306],
+       [ 0.03204457,  1.6700623 , -0.04784876, ..., -0.18683907,
+        -0.13689613,  0.13842422],
+       ...,
+       [ 0.09106207,  1.66590571, -0.01812411, ..., -0.20132722,
+        -0.13786578,  0.15828651],
+       [ 0.09106207,  1.66590571, -0.01812411, ..., -0.20132722,
+        -0.13786578,  0.15828651],
+       [ 0.09106207,  1.66590571, -0.01812411, ..., -0.20132722,
+        -0.13786578,  0.15828651]]), array([[-6.78549036e-02,  1.68157041e+00,  8.28044489e-04, ...,
+        -5.08725144e-01,  6.19423389e-03, -1.11356156e-01],
+       [-6.81623816e-02,  1.68014240e+00,  5.60568646e-04, ...,
+        -5.11429906e-01,  6.03640079e-03, -1.12534085e-01],
+       [-6.81821331e-02,  1.67794740e+00,  6.38645142e-04, ...,
+        -5.13508596e-01,  1.00275278e-02, -1.11478526e-01],
+       ...,
+       [-4.13423553e-02,  1.63736248e+00,  1.88400000e-02, ...,
+        -1.91273831e-01, -1.28534794e-01,  8.20966214e-02],
+       [-4.13423553e-02,  1.63736248e+00,  1.88400000e-02, ...,
+        -1.91273831e-01, -1.28534794e-01,  8.20966214e-02],
+       [-4.13423553e-02,  1.63736248e+00,  1.88400000e-02, ...,
+        -1.91273831e-01, -1.28534794e-01,  8.20966214e-02]]), array([[-0.12033652,  1.6714325 , -0.15161559, ..., -0.45462622,
+         0.10627747,  0.24187475],
+       [-0.12126171,  1.67276394, -0.15241797, ..., -0.45462335,
+         0.10480177,  0.24031433],
+       [-0.12300811,  1.67462873, -0.15371718, ..., -0.45266613,
+         0.10309577,  0.23666552],
+       ...,
+       [-0.05227607,  1.66805196, -0.20703839, ..., -0.33344483,
+        -0.01748765,  0.22398102],
+       [-0.05227607,  1.66805196, -0.20703839, ..., -0.33344483,
+        -0.01748765,  0.22398102],
+       [-0.05227607,  1.66805196, -0.20703839, ..., -0.33344483,
+        -0.01748765,  0.22398102]]), array([[-0.09028517,  1.65910721, -0.28518614, ..., -0.24219726,
+        -0.14372802, -0.08284488],
+       [-0.09442914,  1.65342963, -0.28560963, ..., -0.24431144,
+        -0.14196599, -0.08036873],
+       [-0.10269614,  1.64337277, -0.28716794, ..., -0.24470837,
+        -0.1410352 , -0.07808703],
+       ...,
+       [ 0.15487351,  1.68873453, -0.48774514, ..., -0.1716146 ,
+        -0.12517262, -0.16725168],
+       [ 0.15487351,  1.68873453, -0.48774514, ..., -0.1716146 ,
+        -0.12517262, -0.16725168],
+       [ 0.15487351,  1.68873453, -0.48774514, ..., -0.1716146 ,
+        -0.12517262, -0.16725168]]), array([[-0.10484096,  1.70298553, -0.17872953, ..., -0.38823236,
+        -0.04290712, -0.08756673],
+       [-0.10979187,  1.69944179, -0.18030252, ..., -0.39655859,
+        -0.03439069, -0.08462279],
+       [-0.11759856,  1.69303811, -0.18572721, ..., -0.40912923,
+        -0.02169609, -0.08003867],
+       ...,
+       [ 0.05910453,  1.7524066 , -0.61405385, ..., -0.27412431,
+        -0.11004758, -0.05404502],
+       [ 0.05910453,  1.7524066 , -0.61405385, ..., -0.27412431,
+        -0.11004758, -0.05404502],
+       [ 0.05910453,  1.7524066 , -0.61405385, ..., -0.27412431,
+        -0.11004758, -0.05404502]]), array([[-0.02249381,  1.71001637, -0.39032656, ..., -0.33205381,
+         0.71182621,  0.21065223],
+       [-0.02247997,  1.70995069, -0.39001909, ..., -0.32930858,
+         0.71191812,  0.20735486],
+       [-0.02252915,  1.70987761, -0.38967156, ..., -0.32365245,
+         0.7104367 ,  0.20250905],
+       ...,
+       [-0.06498326,  1.70381188, -0.43270022, ..., -0.24076341,
+        -0.08654284,  0.12369353],
+       [-0.06498326,  1.70381188, -0.43270022, ..., -0.24076341,
+        -0.08654284,  0.12369353],
+       [-0.06498326,  1.70381188, -0.43270022, ..., -0.24076341,
+        -0.08654284,  0.12369353]]), array([[-0.0029631 ,  1.70590591, -0.2154109 , ..., -0.1215753 ,
+         0.8198154 ,  0.07195915],
+       [-0.00295182,  1.70582736, -0.21532375, ..., -0.12061713,
+         0.81813729,  0.07054503],
+       [-0.00296078,  1.70567596, -0.21519098, ..., -0.11891819,
+         0.81521237,  0.06743476],
+       ...,
+       [-0.0043966 ,  1.68804169, -0.25182039, ..., -0.23676648,
+         0.05938482,  0.4204421 ],
+       [-0.0043966 ,  1.68804169, -0.25182039, ..., -0.23676648,
+         0.05938482,  0.4204421 ],
+       [-0.0043966 ,  1.68804169, -0.25182039, ..., -0.23676648,
+         0.05938482,  0.4204421 ]]), array([[-1.70048833e-01,  1.56171870e+00, -2.05531884e-02, ...,
+        -2.81496584e-01,  4.90845919e-01, -2.75334729e-01],
+       [-1.74559057e-01,  1.55546570e+00, -1.98501255e-02, ...,
+        -2.75513887e-01,  4.83813047e-01, -2.89262811e-01],
+       [-1.80921406e-01,  1.54122770e+00, -1.88484658e-02, ...,
+        -2.73623735e-01,  4.42854524e-01, -3.17947669e-01],
+       ...,
+       [ 8.50254819e-02,  1.57917297e+00, -5.54245830e-01, ...,
+        -4.34862159e-01,  1.38272405e-01,  8.98182392e-04],
+       [ 8.50254819e-02,  1.57917297e+00, -5.54245830e-01, ...,
+        -4.34862159e-01,  1.38272405e-01,  8.98182392e-04],
+       [ 8.50254819e-02,  1.57917297e+00, -5.54245830e-01, ...,
+        -4.34862159e-01,  1.38272405e-01,  8.98182392e-04]]), array([[ 0.08441034,  1.58226752, -0.0851031 , ..., -0.37268981,
+         0.01089978, -0.09202986],
+       [ 0.08239573,  1.58323145, -0.08557822, ..., -0.37868232,
+         0.01802897, -0.09144326],
+       [ 0.07844746,  1.58460629, -0.08596293, ..., -0.39147758,
+         0.03807199, -0.09332036],
+       ...,
+       [ 0.13205449,  1.62853646, -0.20504548, ..., -0.24867226,
+        -0.04181147, -0.13691039],
+       [ 0.13205449,  1.62853646, -0.20504548, ..., -0.24867226,
+        -0.04181147, -0.13691039],
+       [ 0.13205449,  1.62853646, -0.20504548, ..., -0.24867226,
+        -0.04181147, -0.13691039]]), array([[-0.16696383,  1.78885055, -0.1207583 , ..., -0.11224996,
+        -0.02461576,  0.25591841],
+       [-0.16749839,  1.788239  , -0.12013067, ..., -0.11134531,
+        -0.01984954,  0.256984  ],
+       [-0.16868906,  1.78678966, -0.11920537, ..., -0.10924567,
+        -0.01038718,  0.25949916],
+       ...,
+       [-0.23990028,  1.76650763,  0.333792  , ..., -0.15450911,
+        -0.13130689, -0.17444767],
+       [-0.23990028,  1.76650763,  0.333792  , ..., -0.15450911,
+        -0.13130689, -0.17444767],
+       [-0.23990028,  1.76650763,  0.333792  , ..., -0.15450911,
+        -0.13130689, -0.17444767]]), array([[ 0.23506701,  1.67719018, -0.19577946, ..., -0.59457964,
+        -0.02495766, -0.10847898],
+       [ 0.23550129,  1.67683995, -0.19372156, ..., -0.60066736,
+        -0.01947963, -0.10926989],
+       [ 0.23707166,  1.67632115, -0.19024719, ..., -0.61332884,
+        -0.01021135, -0.10832651],
+       ...,
+       [ 0.3749533 ,  1.68444633,  0.33226135, ..., -0.18615456,
+        -0.14444792,  0.17809716],
+       [ 0.3749533 ,  1.68444633,  0.33226135, ..., -0.18615456,
+        -0.14444792,  0.17809716],
+       [ 0.3749533 ,  1.68444633,  0.33226135, ..., -0.18615456,
+        -0.14444792,  0.17809716]]), array([[ 0.01384068,  1.83183432,  0.0625183 , ..., -0.29508872,
+         1.01117802, -0.31314468],
+       [ 0.0075973 ,  1.83246255,  0.06762041, ..., -0.27855188,
+         1.00770259, -0.32513399],
+       [-0.00263904,  1.83212638,  0.07369728, ..., -0.24788396,
+         1.00222516, -0.34243754],
+       ...,
+       [-0.03569395,  1.82500839,  0.05174171, ..., -0.23374449,
+        -0.17993712, -0.01826047],
+       [-0.03569395,  1.82500839,  0.05174171, ..., -0.23374449,
+        -0.17993712, -0.01826047],
+       [-0.03569395,  1.82500839,  0.05174171, ..., -0.23374449,
+        -0.17993712, -0.01826047]]), array([[ 0.0196553 ,  1.80887127, -0.1321068 , ..., -0.36475284,
+         0.54900503,  0.5650139 ],
+       [ 0.02065211,  1.81101179, -0.12868093, ..., -0.40471154,
+         0.5500741 ,  0.55102216],
+       [ 0.0225649 ,  1.81463027, -0.12118372, ..., -0.48026607,
+         0.54848266,  0.51940641],
+       ...,
+       [-0.01173021,  1.79579282, -0.01187328, ..., -0.03124116,
+         0.41582561,  0.257591  ],
+       [-0.01173021,  1.79579282, -0.01187328, ..., -0.03124116,
+         0.41582561,  0.257591  ],
+       [-0.01173021,  1.79579282, -0.01187328, ..., -0.03124116,
+         0.41582561,  0.257591  ]])]
+Using Dance
+{'batch_size': 96, 'cuda': True, 'data': {'data_type': 'None', 'name': 'aist', 'seq_len': 240, 'test_dir': './data/aistpp_test_full_wav', 'text': './data/aistpp_full_text', 'train_dir': './data/aistpp_train_wav'}, 'ds_rate': 8, 'epoch': 150, 'expname': 'cc_motion_gpt_text_fix', 'external_wav': './data/aistpp_music_feat_7.5fps', 'external_wav_rate': 1, 'global_vel': True, 'log_per_updates': 1, 'loss_weight': {'mse_weight': 1}, 'move': 8, 'music_normalize': False, 'need_not_train_data': False, 'optimizer': {'kwargs': {'betas': [0.5, 0.999], 'lr': 0.0003, 'weight_decay': 0}, 'schedular_kwargs': {'gamma': 0.1, 'milestones': [100, 200]}, 'type': 'Adam'}, 'rotmat': False, 'save_per_epochs': 15, 'seed': 78, 'structure': {'down_half': {'commit': 0.02, 'depth': 3, 'dilation_growth_rate': 3, 'downs_t': [3], 'emb_width': 512, 'hvqvae_multipliers': [1], 'joint_channel': 3, 'l_bins': 512, 'l_mu': 0.99, 'levels': 1, 'm_conv': 1.0, 'sample_length': 240, 'strides_t': [2], 'use_bottleneck': True, 'vqvae_reverse_decoder_dilation': True, 'width': 512, 'dilation_cycle': None}, 'joint_channel': 3, 'name': 'SepVQVAER', 'up_half': {'commit': 0.02, 'depth': 3, 'dilation_growth_rate': 3, 'downs_t': [3], 'emb_width': 512, 'hvqvae_multipliers': [1], 'joint_channel': 3, 'l_bins': 512, 'l_mu': 0.99, 'levels': 1, 'm_conv': 1.0, 'sample_length': 240, 'strides_t': [2], 'use_bottleneck': True, 'vqvae_reverse_decoder_dilation': True, 'width': 512, 'dilation_cycle': None}, 'use_bottleneck': True}, 'structure_generate': {'base': {'attn_pdrop': 0.1, 'block_size': 29, 'embd_pdrop': 0.1, 'n_embd': 768, 'n_head': 12, 'n_layer': 6, 'n_music': 438, 'n_music_emb': 768, 'n_text': 512, 'resid_pdrop': 0.1, 'vocab_size_down': 512, 'vocab_size_up': 512}, 'block_size': 29, 'head': {'attn_pdrop': 0.1, 'block_size': 29, 'embd_pdrop': 0.1, 'n_embd': 768, 'n_head': 12, 'n_layer': 6, 'resid_pdrop': 0.1, 'vocab_size': 512, 'vocab_size_down': 512, 'vocab_size_up': 512}, 'n_music': 438, 'n_music_emb': 768, 'name': 'CrossCondGPT2'}, 'test_freq': 15, 'testing': {'ckpt_epoch': 135, 'height': 540, 'width': 960}, 'vqvae_weight': './experiments/sep_vqvae_root/ckpt/epoch_500.pt', 'config': 'configs/cc_motion_gpt_text_fix.yaml', 'train': True, 'eval': False, 'visgt': False, 'anl': False, 'sample': False, 'not_use_wholebody': False, 'not_use_upperbody': False, 'not_use_lowerbody': False, 'not_use_torso': False}
+Running dummy forward pass to initialize lazy modules...
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size =batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96 96
+type(first) = <class 'tuple'>
+len(first) = 7
+
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+Dummy forward pass finished. Lazy modules initialized.
+02/19/2026 11:27:23 Epoch: 1
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = batch_size =96
+type(first) = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+ <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+batch_size = 96
+type(first) = <class 'tuple'>
+len(first) = 7
+Traceback (most recent call last):
+  File "/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/main_gpt_all.py", line 62, in <module>
+    main()
+  File "/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/main_gpt_all.py", line 46, in main
+    agent.train()
+  File "/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/mc_gpt_all.py", line 198, in train
+    output, loss = gpt(quants_input, music_seq[:, config.ds_rate//music_relative_rate:], text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq, quants_target)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/parallel/data_parallel.py", line 183, in forward
+    return self.module(*inputs[0], **module_kwargs[0])
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/models/cross_cond_gpt2.py", line 89, in forward
+    logits_up, logits_down, loss_up, loss_down = self.gpt_head(feat, text_meta=text_meta, T_motion=T_motion, N=N, targets=targets, window_abs_start=window_abs_start)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/models/cross_cond_gpt2.py", line 741, in forward
+    x = block(x, T_motion=T_motion, text_meta=text_meta)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/models/cross_cond_gpt2.py", line 526, in forward
+    down = down + self.mamba_down(self.norm_down_1(down))
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/network_space/server126/shared/sunyx/models/Danceba-spatiotemporal-text/models/mamba_simple.py", line 146, in forward
+    out = mamba_inner_fn(
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/mamba_ssm/ops/selective_scan_interface.py", line 306, in mamba_inner_fn
+    return MambaInnerFn.apply(xz, conv1d_weight, conv1d_bias, x_proj_weight, delta_proj_weight,
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/autograd/function.py", line 539, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/torch/cuda/amp/autocast_mode.py", line 113, in decorate_fwd
+    return fwd(*args, **kwargs)
+  File "/network_space/server127_2/shared/caixhdata/conda/envs/danceba/lib/python3.10/site-packages/mamba_ssm/ops/selective_scan_interface.py", line 181, in forward
+    conv1d_out = causal_conv1d_cuda.causal_conv1d_fwd(x, conv1d_weight, conv1d_bias, None, True)
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 610.00 MiB. GPU 0 has a total capacty of 23.60 GiB of which 396.50 MiB is free. Including non-PyTorch memory, this process has 23.19 GiB memory in use. Of the allocated memory 22.83 GiB is allocated by PyTorch, and 37.09 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF

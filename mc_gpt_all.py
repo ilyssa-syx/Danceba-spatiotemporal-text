@@ -45,6 +45,7 @@ class MCTall():
         gpt = self.model2.train()
 
         config = self.config
+        self.device = torch.device('cuda' if config.cuda else 'cpu')
         data = self.config.data
         # criterion = nn.MSELoss()
         training_data = self.training_data
@@ -123,7 +124,6 @@ class MCTall():
         torch.manual_seed(config.seed)
         #if args.cuda:
         torch.cuda.manual_seed(config.seed)
-        self.device = torch.device('cuda' if config.cuda else 'cpu')
 
         if start_epoch > 1:
             print(f"Manually advancing scheduler to epoch {start_epoch - 1}")
@@ -306,6 +306,53 @@ class MCTall():
 
                     visualizeAndWrite(results, config, self.visdir, self.dance_names, epoch_i, quants_out)
                 gpt.train()
+
+            # ── Validation Loss ──────────────────────────────────────────
+            gpt.eval()
+            val_losses = []
+            with torch.no_grad():
+                for val_batch in test_loader:
+                    v_music, v_pose, v_text_upper, v_text_lower, v_text_torso, v_text_whole, v_text_meta = val_batch
+                    v_music = v_music.to(self.device)
+                    v_pose  = v_pose.to(self.device)
+                    v_pose[:, :, :3] = 0
+                    v_text_upper = v_text_upper.to(self.device) if v_text_upper is not None else None
+                    v_text_lower = v_text_lower.to(self.device) if v_text_lower is not None else None
+                    v_text_torso = v_text_torso.to(self.device) if v_text_torso is not None else None
+                    v_text_whole = v_text_whole.to(self.device) if v_text_whole is not None else None
+
+                    _mdr = config.ds_rate if not hasattr(config, 'external_wav') else config.external_wav_rate
+                    _mdr = config.music_ds_rate if hasattr(config, 'music_ds_rate') else _mdr
+                    _mrr = config.music_relative_rate if hasattr(config, 'music_relative_rate') else config.ds_rate
+                    v_music = v_music[:, :, :config.structure_generate.n_music//_mdr].contiguous().float()
+                    _b, _t, _c = v_music.size()
+                    v_music = v_music.view(_b, _t//_mdr, _c*_mdr)
+
+                    v_quants = vqvae.module.encode(v_pose)
+                    _bs = gpt.module.get_block_size()  # 与训练时 seq_len//ds_rate - 1 对齐
+                    if isinstance(v_quants, tuple):
+                        v_qi = tuple(v_quants[ii][0][:, :-1].clone().detach()[:, :_bs] for ii in range(len(v_quants)))
+                        v_qt = tuple(v_quants[ii][0][:, 1:].clone().detach()[:, :_bs]  for ii in range(len(v_quants)))
+                    else:
+                        _q  = v_quants[0]
+                        v_qi = _q[:, :-1].clone().detach()[:, :_bs]
+                        v_qt = _q[:, 1:].clone().detach()[:, :_bs]
+
+                    _off = config.ds_rate // _mrr
+                    _tlen = v_qi[0].size(1) if isinstance(v_qi, tuple) else v_qi.size(1)
+                    _, v_loss = gpt(v_qi, v_music[:, _off:_off + _tlen],
+                                    v_text_upper, v_text_lower, v_text_torso, v_text_whole,
+                                    v_text_meta, v_qt)
+                    val_losses.append(v_loss.mean().item())
+
+            avg_val_loss = sum(val_losses) / len(val_losses) if val_losses else float('nan')
+            print(f'[Epoch {epoch_i}] val_loss: {avg_val_loss:.6f}')
+            val_log_path = os.path.join(self.expdir, 'val_loss.log')
+            with open(val_log_path, 'a') as _f:
+                _f.write(f'{epoch_i},{avg_val_loss:.6f}\n')
+            gpt.train()
+            # ─────────────────────────────────────────────────────────────
+
             self.schedular.step()
 
     def eval(self):
