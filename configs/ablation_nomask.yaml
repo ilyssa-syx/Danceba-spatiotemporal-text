@@ -6,7 +6,7 @@ not_use_upperbody: false   # true → disable upper-body text condition
 not_use_lowerbody: false   # true → disable lower-body text condition
 not_use_torso: false       # true → disable torso text condition
 not_use_simpletag: false   # true → disable simple-tag text condition
-text_mask_mode: full       # full | time_only | part_only | none
+text_mask_mode: part_only       # full | time_only | part_only | none
                            #   full        → body mask + temporal mask (default)
                            #   time_only   → no body mask, keep temporal  [alias: no_body_mask]
                            #   part_only   → no temporal mask, keep body  [alias: no_temporal_mask]
@@ -16,20 +16,22 @@ data:
   data_type: None
   name: aist
   seq_len: 240
-  test_dir: ./data/aistpp_test_full_wav # change
-  train_dir: ./data/aistpp_train_wav # change
+  test_dir: ./data/aistpp_test_full_wav
+  text: ./data/aistpp_full_text
+  train_dir: ./data/aistpp_train_wav
 ds_rate: 8
-epoch: 300
-expname: cc_motion_gpt
-external_wav: ./data/aistpp_music_feat_7.5fps # change
+epoch: 150
+expname: ablation_nomask
+external_wav: ./data/aistpp_music_feat_7.5fps
 external_wav_rate: 1
 global_vel: true
+# init_weight: experiments/cc_motion_gpt_text/ckpt/epoch_1.pt
 log_per_updates: 1
 loss_weight:
   mse_weight: 1
 move: 8
 music_normalize: false
-need_not_train_data: true # if train choose false
+need_not_train_data: false
 optimizer:
   kwargs:
     betas:
@@ -40,12 +42,12 @@ optimizer:
   schedular_kwargs:
     gamma: 0.1
     milestones:
-    - 250
-    - 400
+    - 100
+    - 200
   type: Adam
 rotmat: false
-save_per_epochs: 3
-seed: 42
+save_per_epochs: 15
+seed: 78
 structure:
   down_half:
     commit: 0.02
@@ -100,6 +102,7 @@ structure_generate:
     n_layer: 6
     n_music: 438
     n_music_emb: 768
+    n_text: 512
     resid_pdrop: 0.1
     vocab_size_down: 512
     vocab_size_up: 512
@@ -118,9 +121,10 @@ structure_generate:
   n_music: 438
   n_music_emb: 768
   name: CrossCondGPT2
-test_freq: 3
+test_freq: 15
 testing:
-  ckpt_epoch: 0  # change
+  ckpt_epoch: 135
   height: 540
   width: 960
 vqvae_weight: ./experiments/sep_vqvae_root/ckpt/epoch_500.pt
+# init_weight: ./experiments/cc_motion_gpt_text/ckpt/epoch_120.pt

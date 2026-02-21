@@ -19,12 +19,6 @@ def parse_args():
     group.add_argument('--anl', action='store_true')
     group.add_argument('--sample', action='store_true')
 
-    # Text modality control (store_true means disabled when flag present, all enabled by default)
-    parser.add_argument('--not_use_wholebody', action='store_true', help='Disable whole-body text condition')
-    parser.add_argument('--not_use_upperbody', action='store_true', help='Disable upper-body text condition')
-    parser.add_argument('--not_use_lowerbody', action='store_true', help='Disable lower-body text condition')
-    parser.add_argument('--not_use_torso', action='store_true', help='Disable torso text condition')
-
     return parser.parse_args()
 
 
@@ -39,6 +33,22 @@ def main():
     pprint(config)
 
     config = EasyDict(config)
+
+    # ── Inject text_mask_mode into GPT sub-configs (base & head both host attention blocks) ──
+    # text_mask_mode is read from the YAML config (field: text_mask_mode, default: full)
+    _ALIAS_MAP = {
+        'full': 'full', 'time_only': 'time_only', 'part_only': 'part_only', 'none': 'none',
+        'no_body_mask': 'time_only', 'no_temporal_mask': 'part_only', 'no_mask': 'none',
+    }
+    _raw_mode = getattr(config, 'text_mask_mode', 'full')
+    _canonical_mode = _ALIAS_MAP.get(_raw_mode, 'full')
+    if hasattr(config, 'structure_generate'):
+        if hasattr(config.structure_generate, 'base'):
+            config.structure_generate.base.text_mask_mode = _canonical_mode
+        if hasattr(config.structure_generate, 'head'):
+            config.structure_generate.head.text_mask_mode = _canonical_mode
+    print(f'[text_mask_mode] raw={_raw_mode!r}  canonical={_canonical_mode!r}')
+
     agent = MCTall(config)
     print(config)
 

@@ -1,5 +1,17 @@
 batch_size: 32
 cuda: true
+# ── Ablation switches (all false / full = complete model) ──────────────────
+not_use_wholebody: false   # true → disable whole-body text condition
+not_use_upperbody: false   # true → disable upper-body text condition
+not_use_lowerbody: false   # true → disable lower-body text condition
+not_use_torso: false       # true → disable torso text condition
+not_use_simpletag: false   # true → disable simple-tag text condition
+text_mask_mode: full       # full | time_only | part_only | none
+                           #   full        → body mask + temporal mask (default)
+                           #   time_only   → no body mask, keep temporal  [alias: no_body_mask]
+                           #   part_only   → no temporal mask, keep body  [alias: no_temporal_mask]
+                           #   none        → both off; music→text still forbidden  [alias: no_mask]
+# ───────────────────────────────────────────────────────────────────────────
 data:
   data_type: None
   name: aist

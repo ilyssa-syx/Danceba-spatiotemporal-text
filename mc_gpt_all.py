@@ -61,7 +61,7 @@ class MCTall():
         # Dummy Forward Pass
         print("Running dummy forward pass to initialize lazy modules...")
         dummy_batch = next(iter(training_data)) 
-        music_seq_d, pose_seq_d, text_upper_seq_d, text_lower_seq_d, text_torso_seq_d, text_whole_seq_d, text_meta_seq_d = dummy_batch
+        music_seq_d, pose_seq_d, text_upper_seq_d, text_lower_seq_d, text_torso_seq_d, text_whole_seq_d, text_simple_tag_seq_d, text_meta_seq_d = dummy_batch
         music_seq_d = music_seq_d.to(self.device)
         pose_seq_d = pose_seq_d.to(self.device)
         pose_seq_d[:, :, :3] = 0
@@ -69,6 +69,7 @@ class MCTall():
         text_lower_seq_d = text_lower_seq_d.to(self.device)
         text_torso_seq_d = text_torso_seq_d.to(self.device)
         text_whole_seq_d = text_whole_seq_d.to(self.device)
+        text_simple_tag_seq_d = text_simple_tag_seq_d.to(self.device)
         
         music_ds_rate = config.ds_rate if not hasattr(config, 'external_wav') else config.external_wav_rate
         music_ds_rate = config.music_ds_rate if hasattr(config, 'music_ds_rate') else music_ds_rate # path = 7.5 fps; rate = 1
@@ -92,7 +93,7 @@ class MCTall():
             # 必须使用 .module 绕过 DataParallel 的分发机制，直接在单卡上初始化参数
             # 如果 gpt 不是 DataParallel，直接调用 gpt 即可
             gpt_inner = gpt.module if isinstance(gpt, torch.nn.DataParallel) else gpt
-            _ = gpt_inner(quants_input_d, music_seq_d[:, config.ds_rate//music_relative_rate:], text_upper_seq_d, text_lower_seq_d, text_torso_seq_d, text_whole_seq_d, text_meta_seq_d, quants_target_d)
+            _ = gpt_inner(quants_input_d, music_seq_d[:, config.ds_rate//music_relative_rate:], text_upper_seq_d, text_lower_seq_d, text_torso_seq_d, text_whole_seq_d, text_simple_tag_seq_d, text_meta_seq_d, quants_target_d)
             print("Dummy forward pass finished. Lazy modules initialized.")
         
         # Checkpoint and Start Epoch
@@ -138,16 +139,17 @@ class MCTall():
                 # LR Scheduler missing
                 # pose_seq = map(lambda x: x.to(self.device), batch)
                 
-                music_seq, pose_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq = batch 
+                music_seq, pose_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_simple_tag_seq, text_meta_seq = batch 
 
                 # print(music_seq.size(), pose_seq.size())
-                self._assert_text_modalities(text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq)
+                self._assert_text_modalities(text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_simple_tag_seq)
                 music_seq = music_seq.to(self.device)
                 pose_seq = pose_seq.to(self.device)
                 text_upper_seq = text_upper_seq.to(self.device) if text_upper_seq is not None else None
                 text_lower_seq = text_lower_seq.to(self.device) if text_lower_seq is not None else None
                 text_torso_seq = text_torso_seq.to(self.device) if text_torso_seq is not None else None
                 text_whole_seq = text_whole_seq.to(self.device) if text_whole_seq is not None else None
+                text_simple_tag_seq = text_simple_tag_seq.to(self.device) if text_simple_tag_seq is not None else None
                 
                 pose_seq[:, :, :3] = 0
                 # print(pose_seq.size())
@@ -195,7 +197,7 @@ class MCTall():
                         # output, loss = gpt(quants[:, :-1].clone().detach(), music_seq[:, 1:], quants[:, 1:].clone().detach())
                 # print('L130, ', config.ds_rate//music_relative_rate)
 
-                output, loss = gpt(quants_input, music_seq[:, config.ds_rate//music_relative_rate:], text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq, quants_target)
+                output, loss = gpt(quants_input, music_seq[:, config.ds_rate//music_relative_rate:], text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_simple_tag_seq, text_meta_seq, quants_target)
                 loss = loss.mean() # RuntimeError: grad can be implicitly created only for scalar outputs
                 loss.backward()
 
@@ -231,14 +233,15 @@ class MCTall():
                     for i_eval, batch_eval in enumerate(tqdm(test_loader, desc='Generating Dance Poses')):
                         # Prepare data
                         # pose_seq_eval = map(lambda x: x.to(self.device), batch_eval)
-                        music_seq, pose_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq = batch_eval
-                        self._assert_text_modalities(text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq)
+                        music_seq, pose_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_simple_tag_seq, text_meta_seq = batch_eval
+                        self._assert_text_modalities(text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_simple_tag_seq)
                         music_seq = music_seq.to(self.device)
                         pose_seq = pose_seq.to(self.device)
                         text_upper_seq = text_upper_seq.to(self.device) if text_upper_seq is not None else None
                         text_lower_seq = text_lower_seq.to(self.device) if text_lower_seq is not None else None
                         text_torso_seq = text_torso_seq.to(self.device) if text_torso_seq is not None else None
                         text_whole_seq = text_whole_seq.to(self.device) if text_whole_seq is not None else None
+                        text_simple_tag_seq = text_simple_tag_seq.to(self.device) if text_simple_tag_seq is not None else None
                         
                         quants = vqvae.module.encode(pose_seq)
                         # print(pose_seq.size())
@@ -263,7 +266,7 @@ class MCTall():
 
                         # block_size = gpt.module.get_block_size()
 
-                        zs = gpt.module.sample(x, music_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_meta_seq, shift=config.sample_shift if hasattr(config, 'sample_shift') else None)
+                        zs = gpt.module.sample(x, music_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_simple_tag_seq, text_meta_seq, shift=config.sample_shift if hasattr(config, 'sample_shift') else None)
                         # jj = 0
                         # for k in range(music_seq.size(1)):
                         #     x_cond = x if x.size(1) <= block_size else x[:, -block_size:] # crop context if needed
@@ -312,7 +315,7 @@ class MCTall():
             val_losses = []
             with torch.no_grad():
                 for val_batch in test_loader:
-                    v_music, v_pose, v_text_upper, v_text_lower, v_text_torso, v_text_whole, v_text_meta = val_batch
+                    v_music, v_pose, v_text_upper, v_text_lower, v_text_torso, v_text_whole, v_text_simple_tag, v_text_meta = val_batch
                     v_music = v_music.to(self.device)
                     v_pose  = v_pose.to(self.device)
                     v_pose[:, :, :3] = 0
@@ -320,6 +323,7 @@ class MCTall():
                     v_text_lower = v_text_lower.to(self.device) if v_text_lower is not None else None
                     v_text_torso = v_text_torso.to(self.device) if v_text_torso is not None else None
                     v_text_whole = v_text_whole.to(self.device) if v_text_whole is not None else None
+                    v_text_simple_tag = v_text_simple_tag.to(self.device) if v_text_simple_tag is not None else None
 
                     _mdr = config.ds_rate if not hasattr(config, 'external_wav') else config.external_wav_rate
                     _mdr = config.music_ds_rate if hasattr(config, 'music_ds_rate') else _mdr
@@ -342,7 +346,7 @@ class MCTall():
                     _tlen = v_qi[0].size(1) if isinstance(v_qi, tuple) else v_qi.size(1)
                     _, v_loss = gpt(v_qi, v_music[:, _off:_off + _tlen],
                                     v_text_upper, v_text_lower, v_text_torso, v_text_whole,
-                                    v_text_meta, v_qt)
+                                    v_text_simple_tag, v_text_meta, v_qt)
                     val_losses.append(v_loss.mean().item())
 
             avg_val_loss = sum(val_losses) / len(val_losses) if val_losses else float('nan')
@@ -392,10 +396,16 @@ class MCTall():
                 if hasattr(config, 'demo') and config.demo:
                     music_seq = batch_eval.to(self.device)
                     quants = ([torch.ones(1, 1,).to(self.device).long() * 423], [torch.ones(1, 1,).to(self.device).long() * 12])
+                    text_upper_seq = text_lower_seq = text_torso_seq = text_whole_seq = text_simple_tag_seq = text_meta_seq = None
                 else:
-                    music_seq, pose_seq = batch_eval
+                    music_seq, pose_seq, text_upper_seq, text_lower_seq, text_torso_seq, text_whole_seq, text_simple_tag_seq, text_meta_seq = batch_eval
                     music_seq = music_seq.to(self.device)
                     pose_seq = pose_seq.to(self.device)
+                    text_upper_seq = text_upper_seq.to(self.device) if text_upper_seq is not None else None
+                    text_lower_seq = text_lower_seq.to(self.device) if text_lower_seq is not None else None
+                    text_torso_seq = text_torso_seq.to(self.device) if text_torso_seq is not None else None
+                    text_whole_seq = text_whole_seq.to(self.device) if text_whole_seq is not None else None
+                    text_simple_tag_seq = text_simple_tag_seq.to(self.device) if text_simple_tag_seq is not None else None
                 
                     quants = vqvae.module.encode(pose_seq)
                 # print(pose_seq.size())
@@ -430,7 +440,7 @@ class MCTall():
 
                 # block_size = gpt.module.get_block_size()
 
-                zs = gpt.module.sample(x, cond=music_seq, shift=config.sample_shift if hasattr(config, 'sample_shift') else None)
+                zs = gpt.module.sample(x, cond=music_seq, text_upper=text_upper_seq, text_lower=text_lower_seq, text_torso=text_torso_seq, text_whole=text_whole_seq, text_simple_tag=text_simple_tag_seq, text_meta=text_meta_seq, shift=config.sample_shift if hasattr(config, 'sample_shift') else None)
 
                 pose_sample = vqvae.module.decode(zs)
 
@@ -465,7 +475,7 @@ class MCTall():
         for i_eval, batch_eval in enumerate(tqdm(self.test_loader, desc='Generating Dance Poses')):
             # Prepare data
             # pose_seq_eval = map(lambda x: x.to(self.device), batch_eval)
-            _, pose_seq_eval = batch_eval
+            _, pose_seq_eval, *_ = batch_eval
             # src_pos_eval = pose_seq_eval[:, :] #
             # global_shift = src_pos_eval[:, :, :3].clone()
             # src_pos_eval[:, :, :3] = 0
@@ -565,14 +575,15 @@ class MCTall():
                 results.append(pose_sample)
         visualizeAndWrite(results, config, self.sampledir, names, epoch_tested, quants)
 
-    def _assert_text_modalities(self, text_upper, text_lower, text_torso, text_whole):
+    def _assert_text_modalities(self, text_upper, text_lower, text_torso, text_whole, text_simple_tag):
         """Assert that each text modality is None iff the corresponding not_use_* flag is set."""
         cfg = self.config
         pairs = [
-            ('upper-body', text_upper, getattr(cfg, 'not_use_upperbody', False)),
-            ('lower-body', text_lower, getattr(cfg, 'not_use_lowerbody', False)),
-            ('torso',      text_torso, getattr(cfg, 'not_use_torso',     False)),
-            ('whole-body', text_whole, getattr(cfg, 'not_use_wholebody', False)),
+            ('upper-body', text_upper,    getattr(cfg, 'not_use_upperbody',  False)),
+            ('lower-body', text_lower,    getattr(cfg, 'not_use_lowerbody',  False)),
+            ('torso',      text_torso,    getattr(cfg, 'not_use_torso',      False)),
+            ('whole-body', text_whole,    getattr(cfg, 'not_use_wholebody',  False)),
+            ('simple-tag', text_simple_tag, getattr(cfg, 'not_use_simpletag', False)),
         ]
         for name, tensor, disabled in pairs:
             if disabled:
@@ -618,7 +629,7 @@ class MCTall():
             print ("train with AIST++ dataset!")
             external_wav_rate = self.config.ds_rate // self.config.external_wav_rate  if hasattr(self.config, 'external_wav_rate') else 1
             external_wav_rate = self.config.music_relative_rate if hasattr(self.config, 'music_relative_rate') else external_wav_rate
-            train_music_data, train_dance_data, train_text_upper, train_text_lower, train_text_torso, train_text_whole, train_text_meta = load_data_aist(
+            train_music_data, train_dance_data, train_text_upper, train_text_lower, train_text_torso, train_text_whole, train_text_simple_tag, train_text_meta = load_data_aist(
                 data.train_dir, interval=data.seq_len, move=self.config.move if hasattr(self.config, 'move') else 64, rotmat=self.config.rotmat, \
                 external_wav=self.config.external_wav if hasattr(self.config, 'external_wav') else None, \
                 external_wav_rate=external_wav_rate, \
@@ -633,12 +644,13 @@ class MCTall():
                 data_type=data.data_type)
         self.training_data = prepare_dataloader(
             train_music_data, train_dance_data,
-            train_text_upper, train_text_lower, train_text_torso, train_text_whole, train_text_meta,
+            train_text_upper, train_text_lower, train_text_torso, train_text_whole, train_text_simple_tag, train_text_meta,
             self.config.batch_size,
             not_use_upper=getattr(self.config, 'not_use_upperbody', False),
             not_use_lower=getattr(self.config, 'not_use_lowerbody', False),
             not_use_torso=getattr(self.config, 'not_use_torso',     False),
             not_use_whole=getattr(self.config, 'not_use_wholebody', False),
+            not_use_simple_tag=getattr(self.config, 'not_use_simpletag', False),
         )
 
 
@@ -648,7 +660,7 @@ class MCTall():
         data = self.config.data
         if data.name == "aist":
             print ("test with AIST++ dataset!")
-            music_data, dance_data, dance_names, text_upper, text_lower, text_torso, text_whole, text_meta = load_test_data_aist(
+            music_data, dance_data, dance_names, text_upper, text_lower, text_torso, text_whole, text_simple_tag, text_meta = load_test_data_aist(
                 data.test_dir, \
                 move=config.move, \
                 rotmat=config.rotmat, \
@@ -665,11 +677,12 @@ class MCTall():
         #pdb.set_trace()
 
         self.test_loader = torch.utils.data.DataLoader(
-            MoDaSeq(music_data, dance_data, text_upper, text_lower, text_torso, text_whole, text_meta,
+            MoDaSeq(music_data, dance_data, text_upper, text_lower, text_torso, text_whole, text_simple_tag, text_meta,
                     not_use_upper=getattr(self.config, 'not_use_upperbody', False),
                     not_use_lower=getattr(self.config, 'not_use_lowerbody', False),
                     not_use_torso=getattr(self.config, 'not_use_torso',     False),
-                    not_use_whole=getattr(self.config, 'not_use_wholebody', False)),
+                    not_use_whole=getattr(self.config, 'not_use_wholebody', False),
+                    not_use_simple_tag=getattr(self.config, 'not_use_simpletag', False)),
             batch_size=1,
             shuffle=False,
             collate_fn=text_collate_fn
@@ -732,13 +745,14 @@ class MCTall():
         for directory in dirs_to_create:
             ensure_dir_exists(directory)
         
-def prepare_dataloader(music_data, dance_data, texts_upper, texts_lower, texts_torso, texts_whole, texts_meta, batch_size,
-                       not_use_upper=False, not_use_lower=False, not_use_torso=False, not_use_whole=False):
+def prepare_dataloader(music_data, dance_data, texts_upper, texts_lower, texts_torso, texts_whole, texts_simple_tag, texts_meta, batch_size,
+                       not_use_upper=False, not_use_lower=False, not_use_torso=False, not_use_whole=False, not_use_simple_tag=False):
     print('hi there')
     data_loader = torch.utils.data.DataLoader(
-        MoDaSeq(music_data, dance_data, texts_upper, texts_lower, texts_torso, texts_whole, texts_meta,
+        MoDaSeq(music_data, dance_data, texts_upper, texts_lower, texts_torso, texts_whole, texts_simple_tag, texts_meta,
                 not_use_upper=not_use_upper, not_use_lower=not_use_lower,
-                not_use_torso=not_use_torso, not_use_whole=not_use_whole),
+                not_use_torso=not_use_torso, not_use_whole=not_use_whole,
+                not_use_simple_tag=not_use_simple_tag),
         num_workers=8,
         batch_size=batch_size,
         shuffle=True,

@@ -587,7 +587,7 @@ def _process_single_file_aist(args):
         music_sample_rate = external_wav_rate if external_wav is not None else 1
         
         music_sub_data, dance_sub_data = [], []
-        text_upper_sub, text_lower_sub, text_torso_sub, text_whole_sub = [], [], [], []
+        text_upper_sub, text_lower_sub, text_torso_sub, text_whole_sub, text_simple_tag_sub = [], [], [], [], []
         text_meta_sub = []
         
         if interval is not None:
@@ -601,12 +601,14 @@ def _process_single_file_aist(args):
 
                 # Load text sub seq
                 upper_sub_seq, lower_sub_seq, torso_sub_seq, whole_sub_seq, meta_sub_seq = [], [], [], [], []
+                simple_tag_sub_seq = []
                 for meta in metadata:
                     if meta['start_frame'] * 2 >= i and meta['end_frame'] * 2 < i + interval:
                         upper_sub_seq.append(npz_data[f'{meta["original_index"]}_upper_body_feat'])
                         lower_sub_seq.append(npz_data[f'{meta["original_index"]}_lower_body_feat'])
                         torso_sub_seq.append(npz_data[f'{meta["original_index"]}_torso_feat'])
                         whole_sub_seq.append(npz_data[f'{meta["original_index"]}_whole_body_feat'])
+                        simple_tag_sub_seq.append(npz_data[f'{meta["original_index"]}_simple_tag_feat'])
                         
                         current_meta = meta.copy()
                         current_meta['start_frame'] = current_meta['start_frame'] * 2 - i
@@ -628,6 +630,7 @@ def _process_single_file_aist(args):
                 text_lower_sub.append(stack_text_feats(lower_sub_seq, feat_dim))
                 text_torso_sub.append(stack_text_feats(torso_sub_seq, feat_dim))
                 text_whole_sub.append(stack_text_feats(whole_sub_seq, feat_dim))
+                text_simple_tag_sub.append(stack_text_feats(simple_tag_sub_seq, feat_dim))
                 text_meta_sub.append(meta_sub_seq)
 
                 if len(music_sub_seq) == interval_sample and len(dance_sub_seq) == interval:
@@ -653,11 +656,13 @@ def _process_single_file_aist(args):
             dance_sub_data.append(np_dance)
             
             upper_list, lower_list, torso_list, whole_list, meta_list = [], [], [], [], []
+            simple_tag_list = []
             for meta in metadata:
                 upper_list.append(npz_data[f'{meta["original_index"]}_upper_body_feat'])
                 lower_list.append(npz_data[f'{meta["original_index"]}_lower_body_feat'])
                 torso_list.append(npz_data[f'{meta["original_index"]}_torso_feat'])
                 whole_list.append(npz_data[f'{meta["original_index"]}_whole_body_feat'])
+                simple_tag_list.append(npz_data[f'{meta["original_index"]}_simple_tag_feat'])
                 
                 current_meta = meta.copy()
                 current_meta['start_frame'] = meta['start_frame'] * 2
@@ -679,6 +684,7 @@ def _process_single_file_aist(args):
             text_lower_sub.append(stack_text_feats(lower_list, feat_dim))
             text_torso_sub.append(stack_text_feats(torso_list, feat_dim))
             text_whole_sub.append(stack_text_feats(whole_list, feat_dim))
+            text_simple_tag_sub.append(stack_text_feats(simple_tag_list, feat_dim))
             text_meta_sub.append(meta_list)
         
         return {
@@ -688,6 +694,7 @@ def _process_single_file_aist(args):
             'text_lower': text_lower_sub,
             'text_torso': text_torso_sub,
             'text_whole': text_whole_sub,
+            'text_simple_tag': text_simple_tag_sub,
             'text_meta': text_meta_sub
         }
     except Exception as e:
@@ -698,12 +705,22 @@ def _process_single_file_aist(args):
 def load_data_aist(data_dir, interval=120, move=40, rotmat=False, external_wav=None, external_wav_rate=1, music_normalize=False, wav_padding=0, text_dir=None, num_workers=32):
     """
     Load AIST dataset with optional parallel processing
-    
+
     Args:
         num_workers: Number of parallel workers. Set to 1 to disable parallelization.
+
+    NOTE (Text Modality Ablation):
+        此函数始终加载全部5个文本域（upper/lower/torso/whole/simple_tag）并返回给调用方。
+        全局 text ablation 通过下游的 dataset (MoDaSeq) 的 not_use_* flags 完成：
+          - MoDaSeq.__getitem__ 根据 flag 将对应域返回为 None
+          - text_collate_fn 对全 None 域直接返回 None（batch 级）
+          - CrossCondGPT2._resolve_text_modalities() 将 None 域替换为零张量占位
+          - CrossCondGPTBase.forward() 通过 text_valid_mask 彻底归零，确保语义严格移除
+        此处不直接删除或置 None 任何域，避免破坏缓存/加载流程，
+        也避免将 train/test loader 的 ablation 职责混入数据读取层。
     """
     music_data, dance_data = [], []
-    text_upper, text_lower, text_torso, text_whole = [], [], [], []
+    text_upper, text_lower, text_torso, text_whole, text_simple_tag = [], [], [], [], []
     text_meta = []
     fnames = sorted(os.listdir(data_dir))
     
@@ -743,16 +760,16 @@ def load_data_aist(data_dir, interval=120, move=40, rotmat=False, external_wav=N
             text_lower.extend(result['text_lower'])
             text_torso.extend(result['text_torso'])
             text_whole.extend(result['text_whole'])
+            text_simple_tag.extend(result['text_simple_tag'])
             text_meta.extend(result['text_meta'])
     
-    # Calculate normalization parameters
-    music_np = np.stack(music_data).reshape(-1, music_data[0].shape[1])
-    music_mean = music_np.mean(0)
-    music_std = music_np.std(0)
-    music_std[(np.abs(music_mean) < 1e-5) & (np.abs(music_std) < 1e-5)] = 1
-    
+    # Calculate normalization parameters (only when needed)
     if music_normalize:
         print('Calculating norm mean and std')
+        music_np = np.stack(music_data).reshape(-1, music_data[0].shape[1])
+        music_mean = music_np.mean(0)
+        music_std = music_np.std(0)
+        music_std[(np.abs(music_mean) < 1e-5) & (np.abs(music_std) < 1e-5)] = 1
         music_data_norm = [(music_sub_seq - music_mean) / (music_std + 1e-10) for music_sub_seq in music_data]
         with open('/mnt/lustressd/lisiyao1/dance_experiements/music_norm.json', 'w') as fff:
             sample_dict = {
@@ -763,7 +780,7 @@ def load_data_aist(data_dir, interval=120, move=40, rotmat=False, external_wav=N
     else:
         music_data_norm = music_data
     
-    return music_data_norm, dance_data, text_upper, text_lower, text_torso, text_whole, text_meta
+    return music_data_norm, dance_data, text_upper, text_lower, text_torso, text_whole, text_simple_tag, text_meta
 
 
 
@@ -800,7 +817,7 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
     input_names = []
 
     music_data, dance_data = [], []
-    text_upper, text_lower, text_torso, text_whole = [], [], [], []
+    text_upper, text_lower, text_torso, text_whole, text_simple_tag = [], [], [], [], []
     text_meta = []
     fnames = sorted(os.listdir(data_dir))
     print ('=====================Loading test data==================')
@@ -826,9 +843,9 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
                     np_music = np.array(sample_dict_wav['music_array'])
             
             if 'dance_array' in sample_dict:
-                print('yeah')
+                # print('yeah')
                 np_dance = np.array(sample_dict['dance_array'])
-                print(np_dance.shape)
+                # print(np_dance.shape)
                 if not rotmat:
                     root = np_dance[:, :3]  # the root
                     np_dance = np_dance - np.tile(root, (1, 24))  # Calculate relative offset with respect to root
@@ -874,6 +891,7 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
         lower_list = []
         torso_list = []
         whole_list = []
+        simple_tag_list = []
         meta_list = []
         
         for meta in metadata:
@@ -881,6 +899,7 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
             lower_list.append(npz_data[f'{meta["original_index"]}_lower_body_feat'])
             torso_list.append(npz_data[f'{meta["original_index"]}_torso_feat'])
             whole_list.append(npz_data[f'{meta["original_index"]}_whole_body_feat'])
+            simple_tag_list.append(npz_data[f'{meta["original_index"]}_simple_tag_feat'])
             
             # 处理 Meta 信息
             current_meta = meta.copy()
@@ -904,6 +923,7 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
         text_lower.append(stack_text_feats(lower_list, feat_dim))
         text_torso.append(stack_text_feats(torso_list, feat_dim))
         text_whole.append(stack_text_feats(whole_list, feat_dim))
+        text_simple_tag.append(stack_text_feats(simple_tag_list, feat_dim))
         text_meta.append(meta_list)
 
     # if music_normalize:
@@ -918,8 +938,8 @@ def load_test_data_aist(data_dir, rotmat, move, external_wav=None, external_wav_
     else:
         music_data_norm = music_data
     print('dance-data')
-    print(dance_data)
-    return music_data_norm, dance_data, input_names, text_upper, text_lower, text_torso, text_whole, text_meta
+    # print(dance_data)
+    return music_data_norm, dance_data, input_names, text_upper, text_lower, text_torso, text_whole, text_simple_tag, text_meta
     
 
 
@@ -1125,7 +1145,7 @@ def npy2pkl(npy_file, pkl_root):
     if not os.path.exists(pkl_root):
         os.mkdir(pkl_root)
     alls = np.load(npy_file, allow_pickle=True).item()
-    print(len(alls.keys()))
+    # print(len(alls.keys()))
     for pkl in alls.keys():
     # print(alls.keys())
     # while True:
