@@ -6,7 +6,7 @@ not_use_upperbody: false   # true → disable upper-body text condition
 not_use_lowerbody: false   # true → disable lower-body text condition
 not_use_torso: false       # true → disable torso text condition
 not_use_simpletag: false   # true → disable simple-tag text condition
-text_mask_mode: part_only       # full | time_only | part_only | none
+text_mask_mode: none       # full | time_only | part_only | none
                            #   full        → body mask + temporal mask (default)
                            #   time_only   → no body mask, keep temporal  [alias: no_body_mask]
                            #   part_only   → no temporal mask, keep body  [alias: no_temporal_mask]
@@ -25,7 +25,6 @@ expname: ablation_nomask
 external_wav: ./data/aistpp_music_feat_7.5fps
 external_wav_rate: 1
 global_vel: true
-# init_weight: experiments/cc_motion_gpt_text/ckpt/epoch_1.pt
 log_per_updates: 1
 loss_weight:
   mse_weight: 1
@@ -127,4 +126,4 @@ testing:
   height: 540
   width: 960
 vqvae_weight: ./experiments/sep_vqvae_root/ckpt/epoch_500.pt
-# init_weight: ./experiments/cc_motion_gpt_text/ckpt/epoch_120.pt
+init_weight: ./experiments/ablation_nomask/ckpt/epoch_30.pt

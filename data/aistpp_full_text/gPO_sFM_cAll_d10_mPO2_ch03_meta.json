@@ -1,0 +1,137 @@
+[
+  {
+    "start_frame": 0,
+    "end_frame": 25,
+    "original_index": 0
+  },
+  {
+    "start_frame": 40,
+    "end_frame": 82,
+    "original_index": 1
+  },
+  {
+    "start_frame": 150,
+    "end_frame": 175,
+    "original_index": 2
+  },
+  {
+    "start_frame": 175,
+    "end_frame": 217,
+    "original_index": 3
+  },
+  {
+    "start_frame": 217,
+    "end_frame": 242,
+    "original_index": 4
+  },
+  {
+    "start_frame": 242,
+    "end_frame": 275,
+    "original_index": 5
+  },
+  {
+    "start_frame": 275,
+    "end_frame": 300,
+    "original_index": 6
+  },
+  {
+    "start_frame": 300,
+    "end_frame": 333,
+    "original_index": 7
+  },
+  {
+    "start_frame": 333,
+    "end_frame": 375,
+    "original_index": 8
+  },
+  {
+    "start_frame": 375,
+    "end_frame": 408,
+    "original_index": 9
+  },
+  {
+    "start_frame": 415,
+    "end_frame": 440,
+    "original_index": 10
+  },
+  {
+    "start_frame": 440,
+    "end_frame": 465,
+    "original_index": 11
+  },
+  {
+    "start_frame": 465,
+    "end_frame": 507,
+    "original_index": 12
+  },
+  {
+    "start_frame": 507,
+    "end_frame": 540,
+    "original_index": 13
+  },
+  {
+    "start_frame": 540,
+    "end_frame": 565,
+    "original_index": 14
+  },
+  {
+    "start_frame": 565,
+    "end_frame": 590,
+    "original_index": 15
+  },
+  {
+    "start_frame": 605,
+    "end_frame": 647,
+    "original_index": 16
+  },
+  {
+    "start_frame": 700,
+    "end_frame": 725,
+    "original_index": 17
+  },
+  {
+    "start_frame": 725,
+    "end_frame": 767,
+    "original_index": 18
+  },
+  {
+    "start_frame": 775,
+    "end_frame": 817,
+    "original_index": 19
+  },
+  {
+    "start_frame": 817,
+    "end_frame": 842,
+    "original_index": 20
+  },
+  {
+    "start_frame": 853,
+    "end_frame": 895,
+    "original_index": 21
+  },
+  {
+    "start_frame": 895,
+    "end_frame": 920,
+    "original_index": 22
+  },
+  {
+    "start_frame": 920,
+    "end_frame": 945,
+    "original_index": 23
+  },
+  {
+    "start_frame": 947,
+    "end_frame": 972,
+    "original_index": 24
+  },
+  {
+    "start_frame": 972,
+    "end_frame": 1005,
+    "original_index": 25
+  },
+  {
+    "start_frame": 1115,
+    "end_frame": 1140,
+    "original_index": 26
+  }
+]

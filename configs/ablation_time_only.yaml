@@ -25,7 +25,6 @@ expname: ablation_time_only
 external_wav: ./data/aistpp_music_feat_7.5fps
 external_wav_rate: 1
 global_vel: true
-# init_weight: experiments/cc_motion_gpt_text/ckpt/epoch_1.pt
 log_per_updates: 1
 loss_weight:
   mse_weight: 1
@@ -127,4 +126,4 @@ testing:
   height: 540
   width: 960
 vqvae_weight: ./experiments/sep_vqvae_root/ckpt/epoch_500.pt
-# init_weight: ./experiments/cc_motion_gpt_text/ckpt/epoch_120.pt
+init_weight: ./experiments/ablation_time_only/ckpt/epoch_15.pt

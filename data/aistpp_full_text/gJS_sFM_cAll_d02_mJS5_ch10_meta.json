@@ -1,0 +1,97 @@
+[
+  {
+    "start_frame": 0,
+    "end_frame": 25,
+    "original_index": 0
+  },
+  {
+    "start_frame": 60,
+    "end_frame": 110,
+    "original_index": 1
+  },
+  {
+    "start_frame": 110,
+    "end_frame": 135,
+    "original_index": 2
+  },
+  {
+    "start_frame": 147,
+    "end_frame": 180,
+    "original_index": 3
+  },
+  {
+    "start_frame": 230,
+    "end_frame": 255,
+    "original_index": 4
+  },
+  {
+    "start_frame": 268,
+    "end_frame": 293,
+    "original_index": 5
+  },
+  {
+    "start_frame": 293,
+    "end_frame": 335,
+    "original_index": 6
+  },
+  {
+    "start_frame": 348,
+    "end_frame": 373,
+    "original_index": 7
+  },
+  {
+    "start_frame": 388,
+    "end_frame": 422,
+    "original_index": 8
+  },
+  {
+    "start_frame": 448,
+    "end_frame": 465,
+    "original_index": 9
+  },
+  {
+    "start_frame": 465,
+    "end_frame": 498,
+    "original_index": 10
+  },
+  {
+    "start_frame": 498,
+    "end_frame": 532,
+    "original_index": 11
+  },
+  {
+    "start_frame": 532,
+    "end_frame": 557,
+    "original_index": 12
+  },
+  {
+    "start_frame": 557,
+    "end_frame": 590,
+    "original_index": 13
+  },
+  {
+    "start_frame": 590,
+    "end_frame": 615,
+    "original_index": 14
+  },
+  {
+    "start_frame": 628,
+    "end_frame": 662,
+    "original_index": 15
+  },
+  {
+    "start_frame": 662,
+    "end_frame": 695,
+    "original_index": 16
+  },
+  {
+    "start_frame": 725,
+    "end_frame": 750,
+    "original_index": 17
+  },
+  {
+    "start_frame": 770,
+    "end_frame": 795,
+    "original_index": 18
+  }
+]

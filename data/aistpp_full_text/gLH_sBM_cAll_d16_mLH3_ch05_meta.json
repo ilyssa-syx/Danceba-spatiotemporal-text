@@ -1,0 +1,22 @@
+[
+  {
+    "start_frame": 42,
+    "end_frame": 83,
+    "original_index": 0
+  },
+  {
+    "start_frame": 110,
+    "end_frame": 152,
+    "original_index": 1
+  },
+  {
+    "start_frame": 152,
+    "end_frame": 185,
+    "original_index": 2
+  },
+  {
+    "start_frame": 205,
+    "end_frame": 238,
+    "original_index": 3
+  }
+]

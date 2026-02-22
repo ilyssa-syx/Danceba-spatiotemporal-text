@@ -1,0 +1,42 @@
+[
+  {
+    "start_frame": 15,
+    "end_frame": 48,
+    "original_index": 0
+  },
+  {
+    "start_frame": 67,
+    "end_frame": 92,
+    "original_index": 1
+  },
+  {
+    "start_frame": 107,
+    "end_frame": 140,
+    "original_index": 2
+  },
+  {
+    "start_frame": 145,
+    "end_frame": 170,
+    "original_index": 3
+  },
+  {
+    "start_frame": 170,
+    "end_frame": 195,
+    "original_index": 4
+  },
+  {
+    "start_frame": 195,
+    "end_frame": 228,
+    "original_index": 5
+  },
+  {
+    "start_frame": 238,
+    "end_frame": 272,
+    "original_index": 6
+  },
+  {
+    "start_frame": 290,
+    "end_frame": 315,
+    "original_index": 7
+  }
+]

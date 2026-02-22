@@ -660,12 +660,14 @@ class MCTall():
         data = self.config.data
         if data.name == "aist":
             print ("test with AIST++ dataset!")
+            external_wav_rate = self.config.ds_rate // self.config.external_wav_rate if hasattr(self.config, 'external_wav_rate') else 1
+            external_wav_rate = self.config.music_relative_rate if hasattr(self.config, 'music_relative_rate') else external_wav_rate
             music_data, dance_data, dance_names, text_upper, text_lower, text_torso, text_whole, text_simple_tag, text_meta = load_test_data_aist(
                 data.test_dir, \
                 move=config.move, \
                 rotmat=config.rotmat, \
                 external_wav=config.external_wav if hasattr(self.config, 'external_wav') else None, \
-                external_wav_rate=self.config.external_wav_rate if hasattr(self.config, 'external_wav_rate') else 1, \
+                external_wav_rate=external_wav_rate, \
                 music_normalize=self.config.music_normalize if hasattr(self.config, 'music_normalize') else False,\
                 wav_padding=self.config.wav_padding * (self.config.ds_rate // self.config.music_relative_rate) if hasattr(self.config, 'wav_padding') else 0, \
                 text_dir=data.text if hasattr(data, 'text') else None

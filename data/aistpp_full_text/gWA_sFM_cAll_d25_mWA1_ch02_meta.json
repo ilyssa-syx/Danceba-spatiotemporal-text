@@ -1,0 +1,122 @@
+[
+  {
+    "start_frame": 0,
+    "end_frame": 33,
+    "original_index": 0
+  },
+  {
+    "start_frame": 75,
+    "end_frame": 117,
+    "original_index": 1
+  },
+  {
+    "start_frame": 118,
+    "end_frame": 135,
+    "original_index": 2
+  },
+  {
+    "start_frame": 140,
+    "end_frame": 173,
+    "original_index": 3
+  },
+  {
+    "start_frame": 213,
+    "end_frame": 255,
+    "original_index": 4
+  },
+  {
+    "start_frame": 260,
+    "end_frame": 285,
+    "original_index": 5
+  },
+  {
+    "start_frame": 357,
+    "end_frame": 382,
+    "original_index": 6
+  },
+  {
+    "start_frame": 402,
+    "end_frame": 427,
+    "original_index": 7
+  },
+  {
+    "start_frame": 427,
+    "end_frame": 452,
+    "original_index": 8
+  },
+  {
+    "start_frame": 452,
+    "end_frame": 485,
+    "original_index": 9
+  },
+  {
+    "start_frame": 550,
+    "end_frame": 583,
+    "original_index": 10
+  },
+  {
+    "start_frame": 595,
+    "end_frame": 628,
+    "original_index": 11
+  },
+  {
+    "start_frame": 675,
+    "end_frame": 708,
+    "original_index": 12
+  },
+  {
+    "start_frame": 708,
+    "end_frame": 750,
+    "original_index": 13
+  },
+  {
+    "start_frame": 750,
+    "end_frame": 792,
+    "original_index": 14
+  },
+  {
+    "start_frame": 795,
+    "end_frame": 845,
+    "original_index": 15
+  },
+  {
+    "start_frame": 872,
+    "end_frame": 905,
+    "original_index": 16
+  },
+  {
+    "start_frame": 915,
+    "end_frame": 940,
+    "original_index": 17
+  },
+  {
+    "start_frame": 970,
+    "end_frame": 995,
+    "original_index": 18
+  },
+  {
+    "start_frame": 1055,
+    "end_frame": 1080,
+    "original_index": 19
+  },
+  {
+    "start_frame": 1102,
+    "end_frame": 1127,
+    "original_index": 20
+  },
+  {
+    "start_frame": 1150,
+    "end_frame": 1183,
+    "original_index": 21
+  },
+  {
+    "start_frame": 1183,
+    "end_frame": 1200,
+    "original_index": 22
+  },
+  {
+    "start_frame": 1242,
+    "end_frame": 1275,
+    "original_index": 23
+  }
+]
